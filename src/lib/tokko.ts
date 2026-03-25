@@ -10,48 +10,22 @@ function normalizeStatus(status: TokkoStatus): string {
   return "";
 }
 
+const INACTIVE_STRING_STATUSES = new Set([
+  "inactive",
+  "inactiva",
+  "deleted",
+  "borrada",
+  "draft",
+  "paused",
+  "offmarket",
+]);
+
 export function isTokkoActive(record: {
-  deleted_at?: unknown;
   status?: TokkoStatus;
 }): boolean {
-  if (
-    typeof record.deleted_at === "string" &&
-    record.deleted_at.trim().length > 0
-  ) {
-    return false;
-  }
-
   const normalized = normalizeStatus(record.status);
-  if (!normalized) {
-    return true;
-  }
-
-  const numeric = Number(normalized);
-  if (Number.isFinite(numeric)) {
-    return numeric === 1;
-  }
-
-  const inactiveStatuses = new Set([
-    "inactive",
-    "inactiva",
-    "deleted",
-    "borrada",
-    "draft",
-    "paused",
-    "offmarket",
-  ]);
-  const activeStatuses = new Set([
-    "active",
-    "activa",
-    "published",
-    "publicada",
-  ]);
-
-  if (inactiveStatuses.has(normalized)) {
+  if (INACTIVE_STRING_STATUSES.has(normalized)) {
     return false;
-  }
-  if (activeStatuses.has(normalized)) {
-    return true;
   }
   return true;
 }
