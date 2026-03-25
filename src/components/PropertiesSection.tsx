@@ -4,6 +4,22 @@ import { useEffect, useMemo, useState } from "react";
 import { siteImages } from "@/lib/site-media";
 import { isTokkoActive } from "@/lib/tokko";
 
+function PropertyCardSkeleton() {
+  return (
+    <div className="flex h-full flex-col bg-card rounded-2xl overflow-hidden shadow-card animate-pulse">
+      <div className="h-64 bg-muted" />
+      <div className="flex flex-1 flex-col p-6 gap-3">
+        <div className="h-5 w-3/4 rounded bg-muted" />
+        <div className="h-4 w-1/2 rounded bg-muted" />
+        <div className="mt-auto flex items-center justify-between border-t border-border pt-4">
+          <div className="h-7 w-24 rounded bg-muted" />
+          <div className="h-4 w-16 rounded bg-muted" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 type TokkoOperation = {
   operation_type?: string;
   prices?: Array<{ currency?: string; price?: number | string }>;
@@ -58,47 +74,6 @@ type FeaturedProperty = {
   isFeatured: boolean;
 };
 
-const fallbackProperties: FeaturedProperty[] = [
-  {
-    propertyId: 1,
-    id: "fallback-1",
-    image: siteImages.property1,
-    title: "Departamento 3 Amb. con Cochera en Palermo",
-    price: "Consultar",
-    type: "Venta",
-    beds: 2,
-    baths: 1,
-    parking: 1,
-    area: "66 m²",
-    isFeatured: true,
-  },
-  {
-    propertyId: 2,
-    id: "fallback-2",
-    image: siteImages.property2,
-    title: "Penthouse con Terraza en Puerto Madero",
-    price: "Consultar",
-    type: "Venta",
-    beds: 3,
-    baths: 2,
-    parking: 2,
-    area: "120 m²",
-    isFeatured: true,
-  },
-  {
-    propertyId: 3,
-    id: "fallback-3",
-    image: siteImages.property3,
-    title: "Casa Moderna con Jardín en Zona Norte",
-    price: "Consultar",
-    type: "Venta",
-    beds: 4,
-    baths: 3,
-    parking: 2,
-    area: "250 m²",
-    isFeatured: true,
-  },
-];
 
 function toNumber(value: unknown): number {
   const n = typeof value === "number" ? value : Number(value);
@@ -192,7 +167,8 @@ function mapTokkoToCard(
 const PropertiesSection = () => {
   const [tokkoItems, setTokkoItems] = useState<FeaturedProperty[]>([]);
   const [featuredItems, setFeaturedItems] = useState<FeaturedProperty[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingFeatured, setLoadingFeatured] = useState(true);
+  const [loadingActive, setLoadingActive] = useState(true);
 
   useEffect(() => {
     let mounted = true;
@@ -206,7 +182,12 @@ const PropertiesSection = () => {
         if (mounted && Array.isArray(json.properties) && json.properties.length > 0) {
           setFeaturedItems(json.properties.map((item, index) => ({ ...mapTokkoToCard(item, index), isFeatured: true })));
         }
-      } catch {}
+      } catch {
+      } finally {
+        if (mounted) {
+          setLoadingFeatured(false);
+        }
+      }
     };
     void loadFeatured();
     return () => {
@@ -239,7 +220,7 @@ const PropertiesSection = () => {
         }
       } finally {
         if (mounted) {
-          setLoading(false);
+          setLoadingActive(false);
         }
       }
     };
@@ -249,6 +230,8 @@ const PropertiesSection = () => {
     };
   }, []);
 
+  const loading = loadingFeatured || loadingActive;
+
   const properties = useMemo(() => {
     if (featuredItems.length > 0) {
       return featuredItems.slice(0, 3);
@@ -256,7 +239,7 @@ const PropertiesSection = () => {
     if (tokkoItems.length > 0) {
       return tokkoItems.slice(0, 3).map((item) => ({ ...item, isFeatured: false }));
     }
-    return fallbackProperties;
+    return [];
   }, [featuredItems, tokkoItems]);
 
   return (
@@ -285,75 +268,74 @@ const PropertiesSection = () => {
         </motion.div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {properties.map((property, index) => (
-            <motion.div
-              key={property.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.15 }}
-              className="group flex h-full flex-col bg-card rounded-2xl overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-300 cursor-pointer"
-            >
-              <div className="relative h-64 overflow-hidden">
-                <img
-                  src={property.image}
-                  alt={property.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  loading="lazy"
-                  width={800}
-                  height={600}
-                />
-                <div className="absolute top-4 left-4">
-                  <span className="bg-primary text-primary-foreground text-xs font-bold px-3 py-1.5 rounded-lg uppercase tracking-wide">
-                    {property.type}
-                  </span>
-                </div>
-                <div className="absolute top-4 right-4">
-                  <span className="bg-accent text-accent-foreground text-xs font-bold px-3 py-1.5 rounded-lg">
-                    {property.isFeatured ? "Destacado" : "Disponible"}
-                  </span>
-                </div>
-              </div>
+          {loading
+            ? Array.from({ length: 3 }).map((_, index) => (
+                <PropertyCardSkeleton key={index} />
+              ))
+            : properties.map((property, index) => (
+                <motion.div
+                  key={property.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.15 }}
+                  className="group flex h-full flex-col bg-card rounded-2xl overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-300 cursor-pointer"
+                >
+                  <div className="relative h-64 overflow-hidden">
+                    <img
+                      src={property.image}
+                      alt={property.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
+                      width={800}
+                      height={600}
+                    />
+                    <div className="absolute top-4 left-4">
+                      <span className="bg-primary text-primary-foreground text-xs font-bold px-3 py-1.5 rounded-lg uppercase tracking-wide">
+                        {property.type}
+                      </span>
+                    </div>
+                    <div className="absolute top-4 right-4">
+                      <span className="bg-accent text-accent-foreground text-xs font-bold px-3 py-1.5 rounded-lg">
+                        {property.isFeatured ? "Destacado" : "Disponible"}
+                      </span>
+                    </div>
+                  </div>
 
-              <div className="flex flex-1 flex-col p-6">
-                <h3 className="mb-3 min-h-14 font-bold text-foreground text-lg group-hover:text-primary transition-colors line-clamp-2">
-                  {property.title}
-                </h3>
+                  <div className="flex flex-1 flex-col p-6">
+                    <h3 className="mb-3 min-h-14 font-bold text-foreground text-lg group-hover:text-primary transition-colors line-clamp-2">
+                      {property.title}
+                    </h3>
 
-                <div className="mb-4 flex items-center gap-4 text-muted-foreground text-sm">
-                  <span className="flex items-center gap-1.5">
-                    <BedDouble className="w-4 h-4" /> {property.beds}
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <Bath className="w-4 h-4" /> {property.baths}
-                  </span>
-                  {property.parking > 0 && (
-                    <span className="flex items-center gap-1.5">
-                      <Car className="w-4 h-4" /> {property.parking}
-                    </span>
-                  )}
-                  <span className="flex items-center gap-1.5">
-                    <Maximize className="w-4 h-4" /> {property.area}
-                  </span>
-                </div>
+                    <div className="mb-4 flex items-center gap-4 text-muted-foreground text-sm">
+                      <span className="flex items-center gap-1.5">
+                        <BedDouble className="w-4 h-4" /> {property.beds}
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <Bath className="w-4 h-4" /> {property.baths}
+                      </span>
+                      {property.parking > 0 && (
+                        <span className="flex items-center gap-1.5">
+                          <Car className="w-4 h-4" /> {property.parking}
+                        </span>
+                      )}
+                      <span className="flex items-center gap-1.5">
+                        <Maximize className="w-4 h-4" /> {property.area}
+                      </span>
+                    </div>
 
-                <div className="mt-auto flex items-center justify-between border-t border-border pt-4">
-                  <p className="text-2xl font-bold text-primary">
-                    {property.price}
-                  </p>
-                  <span className="text-sm font-medium text-accent hover:underline">
-                    Ver más →
-                  </span>
-                </div>
-              </div>
-            </motion.div>
-          ))}
+                    <div className="mt-auto flex items-center justify-between border-t border-border pt-4">
+                      <p className="text-2xl font-bold text-primary">
+                        {property.price}
+                      </p>
+                      <span className="text-sm font-medium text-accent hover:underline">
+                        Ver más →
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
         </div>
-        {loading ? (
-          <p className="mt-6 text-center text-sm text-muted-foreground">
-            Cargando propiedades...
-          </p>
-        ) : null}
 
         <motion.div
           initial={{ opacity: 0 }}
