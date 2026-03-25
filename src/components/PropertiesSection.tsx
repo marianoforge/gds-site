@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
 import { BedDouble, Bath, Car, Maximize } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { readFeaturedPropertyIds } from "@/lib/featured-properties";
 import { siteImages } from "@/lib/site-media";
+import { isTokkoActive } from "@/lib/tokko";
 
 type TokkoOperation = {
   operation_type?: string;
@@ -11,6 +11,8 @@ type TokkoOperation = {
 
 type TokkoCardRecord = {
   id?: number;
+  status?: number | string | null;
+  deleted_at?: string | null;
   publication_title?: string;
   title?: string;
   type?: { name?: string };
@@ -35,6 +37,10 @@ type TokkoListResponse = {
   data?: {
     objects?: TokkoCardRecord[];
   };
+};
+
+type FeaturedIdsResponse = {
+  ids?: number[];
 };
 
 type FeaturedProperty = {
@@ -170,19 +176,45 @@ const PropertiesSection = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setFeaturedIds(readFeaturedPropertyIds());
+    let mounted = true;
+    const loadFeaturedIds = async () => {
+      try {
+        const res = await fetch("/api/featured-properties", { cache: "no-store" });
+        if (!res.ok) {
+          return;
+        }
+        const json = (await res.json()) as FeaturedIdsResponse;
+        if (mounted && Array.isArray(json.ids)) {
+          setFeaturedIds(json.ids);
+        }
+      } catch {}
+    };
+    void loadFeaturedIds();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   useEffect(() => {
     let mounted = true;
     const load = async () => {
       try {
-        const res = await fetch("/api/tokko-debug?resource=property&page=1&lang=es_ar&format=json", {
+        const dbRes = await fetch("/api/active-properties", {
           cache: "no-store",
         });
-        const json = (await res.json()) as TokkoListResponse;
-        const objects = Array.isArray(json?.data?.objects) ? json.data.objects : [];
-        const mapped = objects.map(mapTokkoToCard);
+        let objects: TokkoCardRecord[] = [];
+        if (dbRes.ok) {
+          const dbJson = (await dbRes.json()) as TokkoListResponse;
+          objects = Array.isArray(dbJson?.data?.objects) ? dbJson.data.objects : [];
+        }
+        if (objects.length === 0) {
+          const res = await fetch("/api/tokko-debug?resource=property&page=1&lang=es_ar&format=json", {
+            cache: "no-store",
+          });
+          const json = (await res.json()) as TokkoListResponse;
+          objects = Array.isArray(json?.data?.objects) ? json.data.objects : [];
+        }
+        const mapped = objects.filter(isTokkoActive).map(mapTokkoToCard);
         if (mounted) {
           setTokkoItems(mapped);
         }

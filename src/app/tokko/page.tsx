@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { readFeaturedPropertyIds, toggleFeaturedPropertyId, writeFeaturedPropertyIds } from "@/lib/featured-properties";
 
 type TokkoResource = "property" | "development";
 
@@ -16,6 +15,10 @@ type TokkoResponse = {
   page_size?: number | null;
   id?: number | null;
   data: unknown;
+};
+
+type FeaturedIdsResponse = {
+  ids: number[];
 };
 
 type TokkoItem = {
@@ -116,9 +119,25 @@ export default function TokkoPage() {
   const [idFilter, setIdFilter] = useState("");
   const [page, setPage] = useState(1);
   const [featuredIds, setFeaturedIds] = useState<number[]>([]);
+  const [draftFeaturedIds, setDraftFeaturedIds] = useState<number[]>([]);
   const [payload, setPayload] = useState<TokkoResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [savingFeatured, setSavingFeatured] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const loadFeaturedIds = useCallback(async () => {
+    try {
+      const res = await fetch("/api/featured-properties", { cache: "no-store" });
+      if (!res.ok) {
+        return;
+      }
+      const json = (await res.json()) as FeaturedIdsResponse;
+      if (Array.isArray(json.ids)) {
+        setFeaturedIds(json.ids);
+        setDraftFeaturedIds(json.ids);
+      }
+    } catch {}
+  }, []);
+
 
   const allItems = useMemo(() => extractItems(payload?.data), [payload]);
   const items = allItems;
@@ -186,8 +205,8 @@ export default function TokkoPage() {
   }, [resource, idFilter]);
 
   useEffect(() => {
-    setFeaturedIds(readFeaturedPropertyIds());
-  }, []);
+    void loadFeaturedIds();
+  }, [loadFeaturedIds]);
 
   useEffect(() => {
     if (idFilter.trim()) {
@@ -201,12 +220,58 @@ export default function TokkoPage() {
     if (!Number.isInteger(id) || id <= 0) {
       return;
     }
-    setFeaturedIds((prev) => {
-      const next = toggleFeaturedPropertyId(prev, id);
-      writeFeaturedPropertyIds(next);
-      return next;
-    });
+    setDraftFeaturedIds((prev) => (prev.includes(id) ? prev.filter((value) => value !== id) : [...prev, id]));
   }, []);
+
+  const hasPendingFeaturedChanges = useMemo(() => {
+    if (featuredIds.length !== draftFeaturedIds.length) {
+      return true;
+    }
+    const current = new Set(featuredIds);
+    return draftFeaturedIds.some((id) => !current.has(id));
+  }, [featuredIds, draftFeaturedIds]);
+
+  const saveFeaturedChanges = useCallback(async () => {
+    const current = new Set(featuredIds);
+    const draft = new Set(draftFeaturedIds);
+    const toAdd = draftFeaturedIds.filter((id) => !current.has(id));
+    const toRemove = featuredIds.filter((id) => !draft.has(id));
+
+    if (toAdd.length === 0 && toRemove.length === 0) {
+      return;
+    }
+
+    setSavingFeatured(true);
+    setError(null);
+    try {
+      const requests = [
+        ...toAdd.map((id) =>
+          fetch("/api/featured-properties", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ propertyId: id, featured: true }),
+          }),
+        ),
+        ...toRemove.map((id) =>
+          fetch("/api/featured-properties", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ propertyId: id, featured: false }),
+          }),
+        ),
+      ];
+      const responses = await Promise.all(requests);
+      if (responses.some((response) => !response.ok)) {
+        setError("No se pudieron guardar todos los cambios");
+      }
+      await loadFeaturedIds();
+    } catch {
+      setError("No se pudieron guardar los cambios");
+      await loadFeaturedIds();
+    } finally {
+      setSavingFeatured(false);
+    }
+  }, [draftFeaturedIds, featuredIds, loadFeaturedIds]);
 
   return (
     <main className="min-h-screen bg-background py-12">
@@ -255,6 +320,9 @@ export default function TokkoPage() {
             </label>
             <Button onClick={() => void loadById()} disabled={loading || !idFilter.trim()}>
               {loading ? "Cargando..." : "Consultar ID"}
+            </Button>
+            <Button variant="outline" onClick={() => void saveFeaturedChanges()} disabled={savingFeatured || !hasPendingFeaturedChanges}>
+              {savingFeatured ? "Guardando..." : "Save"}
             </Button>
             {!idFilter.trim() ? (
               <div className="ml-auto flex items-center gap-2">
@@ -319,7 +387,7 @@ export default function TokkoPage() {
                   <input
                     type="checkbox"
                     className="h-4 w-4 accent-primary"
-                    checked={featuredIds.includes(typeof item.id === "number" ? item.id : Number(item.id))}
+                    checked={draftFeaturedIds.includes(typeof item.id === "number" ? item.id : Number(item.id))}
                     onChange={() => onToggleFeatured(item)}
                     disabled={!Number.isInteger(typeof item.id === "number" ? item.id : Number(item.id))}
                   />
