@@ -1,41 +1,230 @@
 import { motion } from "framer-motion";
 import { BedDouble, Bath, Car, Maximize } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { readFeaturedPropertyIds } from "@/lib/featured-properties";
 import { siteImages } from "@/lib/site-media";
 
-const properties = [
+type TokkoOperation = {
+  operation_type?: string;
+  prices?: Array<{ currency?: string; price?: number | string }>;
+};
+
+type TokkoCardRecord = {
+  id?: number;
+  publication_title?: string;
+  title?: string;
+  type?: { name?: string };
+  photos?: Array<Record<string, unknown>>;
+  operations?: TokkoOperation[];
+  roofed_surface?: number | string;
+  total_surface?: number | string;
+  surface?: number | string;
+  suite_amount?: number | string;
+  room_amount?: number | string;
+  bedroom_amount?: number | string;
+  bathrooms?: number | string;
+  bathroom_amount?: number | string;
+  parking_lot_amount?: number | string;
+  garage?: number | string | boolean;
+  is_starred?: boolean;
+  featured?: boolean;
+  starred?: boolean;
+} & Record<string, unknown>;
+
+type TokkoListResponse = {
+  data?: {
+    objects?: TokkoCardRecord[];
+  };
+};
+
+type FeaturedProperty = {
+  propertyId: number;
+  id: string;
+  image: string;
+  title: string;
+  price: string;
+  type: string;
+  beds: number;
+  baths: number;
+  parking: number;
+  area: string;
+  isFeatured: boolean;
+};
+
+const fallbackProperties: FeaturedProperty[] = [
   {
+    propertyId: 1,
+    id: "fallback-1",
     image: siteImages.property1,
     title: "Departamento 3 Amb. con Cochera en Palermo",
-    price: "U$270,000",
+    price: "Consultar",
     type: "Venta",
     beds: 2,
     baths: 1,
     parking: 1,
     area: "66 m²",
+    isFeatured: true,
   },
   {
+    propertyId: 2,
+    id: "fallback-2",
     image: siteImages.property2,
     title: "Penthouse con Terraza en Puerto Madero",
-    price: "U$450,000",
+    price: "Consultar",
     type: "Venta",
     beds: 3,
     baths: 2,
     parking: 2,
     area: "120 m²",
+    isFeatured: true,
   },
   {
+    propertyId: 3,
+    id: "fallback-3",
     image: siteImages.property3,
     title: "Casa Moderna con Jardín en Zona Norte",
-    price: "U$380,000",
+    price: "Consultar",
     type: "Venta",
     beds: 4,
     baths: 3,
     parking: 2,
     area: "250 m²",
+    isFeatured: true,
   },
 ];
 
+function toNumber(value: unknown): number {
+  const n = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function toCapitalizedText(value: string): string {
+  return value
+    .toLocaleLowerCase("es-AR")
+    .split(" ")
+    .filter((part) => part.length > 0)
+    .map((part) => part.charAt(0).toLocaleUpperCase("es-AR") + part.slice(1))
+    .join(" ");
+}
+
+function getImage(item: TokkoCardRecord): string {
+  if (!Array.isArray(item.photos) || item.photos.length === 0) {
+    return siteImages.property1;
+  }
+  const first = item.photos[0];
+  const url =
+    (typeof first.original === "string" && first.original) ||
+    (typeof first.image === "string" && first.image) ||
+    (typeof first.large === "string" && first.large) ||
+    (typeof first.medium === "string" && first.medium) ||
+    (typeof first.small === "string" && first.small) ||
+    (typeof first.url === "string" && first.url) ||
+    "";
+  return url || siteImages.property1;
+}
+
+function getPrice(item: TokkoCardRecord): string {
+  const firstOperation = Array.isArray(item.operations) ? item.operations[0] : undefined;
+  const firstPrice = firstOperation?.prices?.[0];
+  const amount = toNumber(firstPrice?.price);
+  if (amount > 0) {
+    const currency = (firstPrice?.currency ?? "USD").toUpperCase();
+    const formatter = new Intl.NumberFormat("es-AR");
+    const symbol = currency === "USD" ? "U$S" : currency;
+    return `${symbol} ${formatter.format(amount)}`;
+  }
+  return "Consultar";
+}
+
+function getType(item: TokkoCardRecord): string {
+  const firstOperation = Array.isArray(item.operations) ? item.operations[0] : undefined;
+  return toCapitalizedText(firstOperation?.operation_type ?? item.type?.name ?? "Propiedad");
+}
+
+function mapTokkoToCard(item: TokkoCardRecord, index: number): FeaturedProperty {
+  const itemId = toNumber(item.id);
+  const beds = toNumber(item.bedroom_amount || item.room_amount || item.suite_amount);
+  const baths = toNumber(item.bathroom_amount || item.bathrooms);
+  const parkingRaw = typeof item.garage === "boolean" ? (item.garage ? 1 : 0) : item.garage || item.parking_lot_amount;
+  const parking = toNumber(parkingRaw);
+  const areaRaw = toNumber(item.roofed_surface || item.total_surface || item.surface);
+  const title = item.publication_title ?? item.title ?? "Propiedad";
+  return {
+    propertyId: itemId,
+    id: String(item.id ?? `tokko-${index}`),
+    image: getImage(item),
+    title: toCapitalizedText(title),
+    price: getPrice(item),
+    type: getType(item),
+    beds,
+    baths,
+    parking,
+    area: areaRaw > 0 ? `${areaRaw} m²` : "-",
+    isFeatured: false,
+  };
+}
+
 const PropertiesSection = () => {
+  const [tokkoItems, setTokkoItems] = useState<FeaturedProperty[]>([]);
+  const [featuredIds, setFeaturedIds] = useState<number[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setFeaturedIds(readFeaturedPropertyIds());
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      try {
+        const res = await fetch("/api/tokko-debug?resource=property&page=1&lang=es_ar&format=json", {
+          cache: "no-store",
+        });
+        const json = (await res.json()) as TokkoListResponse;
+        const objects = Array.isArray(json?.data?.objects) ? json.data.objects : [];
+        const mapped = objects.map(mapTokkoToCard);
+        if (mounted) {
+          setTokkoItems(mapped);
+        }
+      } catch {
+        if (mounted) {
+          setTokkoItems([]);
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+    void load();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const properties = useMemo(() => {
+    if (tokkoItems.length === 0) {
+      return fallbackProperties;
+    }
+    if (featuredIds.length > 0) {
+      const byId = new Map<number, FeaturedProperty>();
+      tokkoItems.forEach((item) => {
+        if (item.propertyId > 0) {
+          byId.set(item.propertyId, item);
+        }
+      });
+      const selected = featuredIds
+        .map((id) => byId.get(id))
+        .filter((item): item is FeaturedProperty => Boolean(item))
+        .slice(0, 3)
+        .map((item) => ({ ...item, isFeatured: true }));
+      if (selected.length > 0) {
+        return selected;
+      }
+    }
+    return tokkoItems.slice(0, 3).map((item) => ({ ...item, isFeatured: false }));
+  }, [featuredIds, tokkoItems]);
+
   return (
     <section id="propiedades" className="py-24 bg-secondary">
       <div className="container mx-auto px-4 lg:px-8">
@@ -58,14 +247,13 @@ const PropertiesSection = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {properties.map((property, index) => (
             <motion.div
-              key={property.title}
+              key={property.id}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.15 }}
-              className="group bg-card rounded-2xl overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-300 cursor-pointer"
+              className="group flex h-full flex-col bg-card rounded-2xl overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-300 cursor-pointer"
             >
-              {/* Image */}
               <div className="relative h-64 overflow-hidden">
                 <img
                   src={property.image}
@@ -82,18 +270,17 @@ const PropertiesSection = () => {
                 </div>
                 <div className="absolute top-4 right-4">
                   <span className="bg-accent text-accent-foreground text-xs font-bold px-3 py-1.5 rounded-lg">
-                    Destacado
+                    {property.isFeatured ? "Destacado" : "Disponible"}
                   </span>
                 </div>
               </div>
 
-              {/* Content */}
-              <div className="p-6">
-                <h3 className="font-bold text-foreground text-lg mb-3 group-hover:text-primary transition-colors line-clamp-2">
+              <div className="flex flex-1 flex-col p-6">
+                <h3 className="mb-3 min-h-14 font-bold text-foreground text-lg group-hover:text-primary transition-colors line-clamp-2">
                   {property.title}
                 </h3>
 
-                <div className="flex items-center gap-4 mb-4 text-muted-foreground text-sm">
+                <div className="mb-4 flex items-center gap-4 text-muted-foreground text-sm">
                   <span className="flex items-center gap-1.5">
                     <BedDouble className="w-4 h-4" /> {property.beds}
                   </span>
@@ -110,7 +297,7 @@ const PropertiesSection = () => {
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between pt-4 border-t border-border">
+                <div className="mt-auto flex items-center justify-between border-t border-border pt-4">
                   <p className="text-2xl font-bold text-primary">{property.price}</p>
                   <span className="text-sm font-medium text-accent hover:underline">
                     Ver más →
@@ -120,6 +307,7 @@ const PropertiesSection = () => {
             </motion.div>
           ))}
         </div>
+        {loading ? <p className="mt-6 text-center text-sm text-muted-foreground">Cargando propiedades...</p> : null}
 
         <motion.div
           initial={{ opacity: 0 }}

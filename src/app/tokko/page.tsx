@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { readFeaturedPropertyIds, toggleFeaturedPropertyId, writeFeaturedPropertyIds } from "@/lib/featured-properties";
 
 type TokkoResource = "property" | "development";
 
@@ -110,17 +111,19 @@ export default function TokkoPage() {
   const [resource, setResource] = useState<TokkoResource>("property");
   const [idFilter, setIdFilter] = useState("");
   const [page, setPage] = useState(1);
+  const [featuredIds, setFeaturedIds] = useState<number[]>([]);
   const [payload, setPayload] = useState<TokkoResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const items = useMemo(() => extractItems(payload?.data), [payload]);
+  const allItems = useMemo(() => extractItems(payload?.data), [payload]);
+  const items = allItems;
   const hasNextPage = useMemo(() => {
     if (idFilter.trim() || !payload || !payload.page_size) {
       return false;
     }
-    return items.length >= payload.page_size;
-  }, [idFilter, items.length, payload]);
+    return allItems.length >= payload.page_size;
+  }, [allItems.length, idFilter, payload]);
 
   const loadListData = useCallback(async () => {
     setLoading(true);
@@ -179,11 +182,27 @@ export default function TokkoPage() {
   }, [resource, idFilter]);
 
   useEffect(() => {
+    setFeaturedIds(readFeaturedPropertyIds());
+  }, []);
+
+  useEffect(() => {
     if (idFilter.trim()) {
       return;
     }
     void loadListData();
   }, [loadListData, idFilter]);
+
+  const onToggleFeatured = useCallback((item: TokkoRecord) => {
+    const id = typeof item.id === "number" ? item.id : Number(item.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      return;
+    }
+    setFeaturedIds((prev) => {
+      const next = toggleFeaturedPropertyId(prev, id);
+      writeFeaturedPropertyIds(next);
+      return next;
+    });
+  }, []);
 
   return (
     <main className="min-h-screen bg-background py-12">
@@ -230,7 +249,6 @@ export default function TokkoPage() {
                 }}
               />
             </label>
-
             <Button onClick={() => void loadById()} disabled={loading || !idFilter.trim()}>
               {loading ? "Cargando..." : "Consultar ID"}
             </Button>
@@ -275,7 +293,9 @@ export default function TokkoPage() {
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
             <div className="rounded-lg border bg-secondary/40 px-4 py-3">
               <p className="text-sm text-muted-foreground">Total general</p>
-              <p className="text-3xl font-bold leading-none">{items.length}</p>
+              <p className="text-3xl font-bold leading-none">{allItems.length}</p>
+              <p className="mt-3 text-sm text-muted-foreground">Destacadas configuradas en el sitio</p>
+              <p className="text-2xl font-semibold leading-none">{featuredIds.length}</p>
             </div>
 
             {items.map((item, index) => (
@@ -291,6 +311,16 @@ export default function TokkoPage() {
                 <p className="text-xs text-muted-foreground">
                   Status: {item.status ?? "-"} {item.deleted_at ? `· deleted_at: ${item.deleted_at}` : ""}
                 </p>
+                <label className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-primary"
+                    checked={featuredIds.includes(typeof item.id === "number" ? item.id : Number(item.id))}
+                    onChange={() => onToggleFeatured(item)}
+                    disabled={!Number.isInteger(typeof item.id === "number" ? item.id : Number(item.id))}
+                  />
+                  Destacar en home
+                </label>
                 <div className="mt-3 flex flex-wrap items-center gap-3">
                   {item.web_url ? (
                     <a className="text-sm text-primary underline" href={item.web_url} target="_blank" rel="noreferrer">
