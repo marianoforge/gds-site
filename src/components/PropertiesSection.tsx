@@ -41,6 +41,7 @@ type TokkoListResponse = {
 
 type FeaturedIdsResponse = {
   ids?: number[];
+  properties?: TokkoCardRecord[];
 };
 
 type FeaturedProperty = {
@@ -130,7 +131,9 @@ function getImage(item: TokkoCardRecord): string {
 }
 
 function getPrice(item: TokkoCardRecord): string {
-  const firstOperation = Array.isArray(item.operations) ? item.operations[0] : undefined;
+  const firstOperation = Array.isArray(item.operations)
+    ? item.operations[0]
+    : undefined;
   const firstPrice = firstOperation?.prices?.[0];
   const amount = toNumber(firstPrice?.price);
   if (amount > 0) {
@@ -143,17 +146,33 @@ function getPrice(item: TokkoCardRecord): string {
 }
 
 function getType(item: TokkoCardRecord): string {
-  const firstOperation = Array.isArray(item.operations) ? item.operations[0] : undefined;
-  return toCapitalizedText(firstOperation?.operation_type ?? item.type?.name ?? "Propiedad");
+  const firstOperation = Array.isArray(item.operations)
+    ? item.operations[0]
+    : undefined;
+  return toCapitalizedText(
+    firstOperation?.operation_type ?? item.type?.name ?? "Propiedad",
+  );
 }
 
-function mapTokkoToCard(item: TokkoCardRecord, index: number): FeaturedProperty {
+function mapTokkoToCard(
+  item: TokkoCardRecord,
+  index: number,
+): FeaturedProperty {
   const itemId = toNumber(item.id);
-  const beds = toNumber(item.bedroom_amount || item.room_amount || item.suite_amount);
+  const beds = toNumber(
+    item.bedroom_amount || item.room_amount || item.suite_amount,
+  );
   const baths = toNumber(item.bathroom_amount || item.bathrooms);
-  const parkingRaw = typeof item.garage === "boolean" ? (item.garage ? 1 : 0) : item.garage || item.parking_lot_amount;
+  const parkingRaw =
+    typeof item.garage === "boolean"
+      ? item.garage
+        ? 1
+        : 0
+      : item.garage || item.parking_lot_amount;
   const parking = toNumber(parkingRaw);
-  const areaRaw = toNumber(item.roofed_surface || item.total_surface || item.surface);
+  const areaRaw = toNumber(
+    item.roofed_surface || item.total_surface || item.surface,
+  );
   const title = item.publication_title ?? item.title ?? "Propiedad";
   return {
     propertyId: itemId,
@@ -172,24 +191,24 @@ function mapTokkoToCard(item: TokkoCardRecord, index: number): FeaturedProperty 
 
 const PropertiesSection = () => {
   const [tokkoItems, setTokkoItems] = useState<FeaturedProperty[]>([]);
-  const [featuredIds, setFeaturedIds] = useState<number[]>([]);
+  const [featuredItems, setFeaturedItems] = useState<FeaturedProperty[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
-    const loadFeaturedIds = async () => {
+    const loadFeatured = async () => {
       try {
         const res = await fetch("/api/featured-properties", { cache: "no-store" });
         if (!res.ok) {
           return;
         }
         const json = (await res.json()) as FeaturedIdsResponse;
-        if (mounted && Array.isArray(json.ids)) {
-          setFeaturedIds(json.ids);
+        if (mounted && Array.isArray(json.properties) && json.properties.length > 0) {
+          setFeaturedItems(json.properties.map((item, index) => ({ ...mapTokkoToCard(item, index), isFeatured: true })));
         }
       } catch {}
     };
-    void loadFeaturedIds();
+    void loadFeatured();
     return () => {
       mounted = false;
     };
@@ -199,18 +218,14 @@ const PropertiesSection = () => {
     let mounted = true;
     const load = async () => {
       try {
-        const dbRes = await fetch("/api/active-properties", {
-          cache: "no-store",
-        });
+        const dbRes = await fetch("/api/active-properties", { cache: "no-store" });
         let objects: TokkoCardRecord[] = [];
         if (dbRes.ok) {
           const dbJson = (await dbRes.json()) as TokkoListResponse;
           objects = Array.isArray(dbJson?.data?.objects) ? dbJson.data.objects : [];
         }
         if (objects.length === 0) {
-          const res = await fetch("/api/tokko-debug?resource=property&page=1&lang=es_ar&format=json", {
-            cache: "no-store",
-          });
+          const res = await fetch("/api/tokko-debug?resource=property&page=1&lang=es_ar&format=json", { cache: "no-store" });
           const json = (await res.json()) as TokkoListResponse;
           objects = Array.isArray(json?.data?.objects) ? json.data.objects : [];
         }
@@ -235,27 +250,14 @@ const PropertiesSection = () => {
   }, []);
 
   const properties = useMemo(() => {
-    if (tokkoItems.length === 0) {
-      return fallbackProperties;
+    if (featuredItems.length > 0) {
+      return featuredItems.slice(0, 3);
     }
-    if (featuredIds.length > 0) {
-      const byId = new Map<number, FeaturedProperty>();
-      tokkoItems.forEach((item) => {
-        if (item.propertyId > 0) {
-          byId.set(item.propertyId, item);
-        }
-      });
-      const selected = featuredIds
-        .map((id) => byId.get(id))
-        .filter((item): item is FeaturedProperty => Boolean(item))
-        .slice(0, 3)
-        .map((item) => ({ ...item, isFeatured: true }));
-      if (selected.length > 0) {
-        return selected;
-      }
+    if (tokkoItems.length > 0) {
+      return tokkoItems.slice(0, 3).map((item) => ({ ...item, isFeatured: false }));
     }
-    return tokkoItems.slice(0, 3).map((item) => ({ ...item, isFeatured: false }));
-  }, [featuredIds, tokkoItems]);
+    return fallbackProperties;
+  }, [featuredItems, tokkoItems]);
 
   return (
     <section id="propiedades" className="py-24 bg-secondary">
@@ -267,12 +269,18 @@ const PropertiesSection = () => {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <p className="text-accent font-semibold tracking-[0.15em] uppercase text-sm mb-3">Propiedades</p>
+          <p className="text-accent font-semibold tracking-[0.15em] uppercase text-sm mb-3">
+            Propiedades
+          </p>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
-            Propiedades <span className="font-serif italic font-normal text-primary">Destacadas</span>
+            Propiedades{" "}
+            <span className="font-serif italic font-normal text-primary">
+              Destacadas
+            </span>
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Invertí en propiedades seleccionadas con el respaldo de nuestro equipo profesional
+            Invertí en propiedades seleccionadas con el respaldo de nuestro
+            equipo profesional
           </p>
         </motion.div>
 
@@ -330,7 +338,9 @@ const PropertiesSection = () => {
                 </div>
 
                 <div className="mt-auto flex items-center justify-between border-t border-border pt-4">
-                  <p className="text-2xl font-bold text-primary">{property.price}</p>
+                  <p className="text-2xl font-bold text-primary">
+                    {property.price}
+                  </p>
                   <span className="text-sm font-medium text-accent hover:underline">
                     Ver más →
                   </span>
@@ -339,7 +349,11 @@ const PropertiesSection = () => {
             </motion.div>
           ))}
         </div>
-        {loading ? <p className="mt-6 text-center text-sm text-muted-foreground">Cargando propiedades...</p> : null}
+        {loading ? (
+          <p className="mt-6 text-center text-sm text-muted-foreground">
+            Cargando propiedades...
+          </p>
+        ) : null}
 
         <motion.div
           initial={{ opacity: 0 }}

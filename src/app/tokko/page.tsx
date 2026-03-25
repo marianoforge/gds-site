@@ -4,7 +4,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 type TokkoResource = "property" | "development";
 
@@ -106,7 +112,9 @@ function extractPropertyImages(item: TokkoRecord): PropertyImage[] {
           data.thumb,
           data.thumbnail,
         ];
-        const url = urlFields.find((value) => typeof value === "string" && value.length > 0);
+        const url = urlFields.find(
+          (value) => typeof value === "string" && value.length > 0,
+        );
         if (!url || typeof url !== "string") {
           return null;
         }
@@ -118,7 +126,10 @@ function extractPropertyImages(item: TokkoRecord): PropertyImage[] {
         return {
           url,
           thumbUrl: thumbCandidate,
-          alt: typeof data.description === "string" && data.description.length > 0 ? data.description : `Imagen ${index + 1}`,
+          alt:
+            typeof data.description === "string" && data.description.length > 0
+              ? data.description
+              : `Imagen ${index + 1}`,
         } satisfies PropertyImage;
       })
       .filter(isNonNull);
@@ -145,7 +156,9 @@ export default function TokkoPage() {
   const [error, setError] = useState<string | null>(null);
   const loadFeaturedIds = useCallback(async () => {
     try {
-      const res = await fetch("/api/featured-properties", { cache: "no-store" });
+      const res = await fetch("/api/featured-properties", {
+        cache: "no-store",
+      });
       if (!res.ok) {
         return;
       }
@@ -160,7 +173,9 @@ export default function TokkoPage() {
   const loadCronLogs = useCallback(async () => {
     setLoadingCronLogs(true);
     try {
-      const res = await fetch("/api/cron/tokko-active-sync/logs?limit=20", { cache: "no-store" });
+      const res = await fetch("/api/cron/tokko-active-sync/logs?limit=20", {
+        cache: "no-store",
+      });
       if (!res.ok) {
         return;
       }
@@ -173,7 +188,6 @@ export default function TokkoPage() {
       setLoadingCronLogs(false);
     }
   }, []);
-
 
   const allItems = useMemo(() => extractItems(payload?.data), [payload]);
   const items = allItems;
@@ -194,7 +208,9 @@ export default function TokkoPage() {
         lang: "es_ar",
         format: "json",
       });
-      const res = await fetch(`/api/tokko-debug?${params.toString()}`, { cache: "no-store" });
+      const res = await fetch(`/api/tokko-debug?${params.toString()}`, {
+        cache: "no-store",
+      });
       const json = (await res.json()) as TokkoResponse | { error: string };
       if (!res.ok || "error" in json) {
         setPayload(null);
@@ -224,7 +240,9 @@ export default function TokkoPage() {
         format: "json",
         id,
       });
-      const res = await fetch(`/api/tokko-debug?${params.toString()}`, { cache: "no-store" });
+      const res = await fetch(`/api/tokko-debug?${params.toString()}`, {
+        cache: "no-store",
+      });
       const json = (await res.json()) as TokkoResponse | { error: string };
       if (!res.ok || "error" in json) {
         setPayload(null);
@@ -260,7 +278,9 @@ export default function TokkoPage() {
     if (!Number.isInteger(id) || id <= 0) {
       return;
     }
-    setDraftFeaturedIds((prev) => (prev.includes(id) ? prev.filter((value) => value !== id) : [...prev, id]));
+    setDraftFeaturedIds((prev) =>
+      prev.includes(id) ? prev.filter((value) => value !== id) : [...prev, id],
+    );
   }, []);
 
   const hasPendingFeaturedChanges = useMemo(() => {
@@ -317,10 +337,15 @@ export default function TokkoPage() {
     <main className="min-h-screen bg-background py-12">
       <div className="container mx-auto px-4 lg:px-8 space-y-6">
         <div className="space-y-2">
-          <p className="text-accent font-semibold tracking-[0.15em] uppercase text-sm">Tokko Explorer</p>
-          <h1 className="text-3xl md:text-4xl font-bold">Listado de propiedades</h1>
+          <p className="text-accent font-semibold tracking-[0.15em] uppercase text-sm">
+            Tokko Explorer
+          </p>
+          <h1 className="text-3xl md:text-4xl font-bold">
+            Listado de propiedades
+          </h1>
           <p className="text-muted-foreground">
-            Endpoint base de schema: https://www.tokkobroker.com/api/v1/development/
+            Endpoint base de schema:
+            https://www.tokkobroker.com/api/v1/development/
           </p>
         </div>
 
@@ -345,7 +370,9 @@ export default function TokkoPage() {
             </label>
 
             <label className="text-sm">
-              <span className="mb-1 block text-muted-foreground">ID (opcional)</span>
+              <span className="mb-1 block text-muted-foreground">
+                ID (opcional)
+              </span>
               <input
                 type="number"
                 className="h-10 w-36 rounded-md border bg-background px-3"
@@ -358,10 +385,17 @@ export default function TokkoPage() {
                 }}
               />
             </label>
-            <Button onClick={() => void loadById()} disabled={loading || !idFilter.trim()}>
+            <Button
+              onClick={() => void loadById()}
+              disabled={loading || !idFilter.trim()}
+            >
               {loading ? "Cargando..." : "Consultar ID"}
             </Button>
-            <Button variant="outline" onClick={() => void saveFeaturedChanges()} disabled={savingFeatured || !hasPendingFeaturedChanges}>
+            <Button
+              variant="outline"
+              onClick={() => void saveFeaturedChanges()}
+              disabled={savingFeatured || !hasPendingFeaturedChanges}
+            >
               {savingFeatured ? "Guardando..." : "Guardar"}
             </Button>
             {!idFilter.trim() ? (
@@ -394,28 +428,42 @@ export default function TokkoPage() {
           <CardHeader>
             <div className="flex items-center justify-between gap-3">
               <CardTitle>Logs del cron</CardTitle>
-              <Button variant="outline" size="sm" onClick={() => void loadCronLogs()} disabled={loadingCronLogs}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void loadCronLogs()}
+                disabled={loadingCronLogs}
+              >
                 {loadingCronLogs ? "Actualizando..." : "Actualizar"}
               </Button>
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
-            {cronLogs.length === 0 ? <p className="text-sm text-muted-foreground">Sin logs todavía.</p> : null}
+            {cronLogs.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Sin logs todavía.</p>
+            ) : null}
             {cronLogs.map((log) => (
               <article key={log.id} className="rounded-lg border p-3 text-sm">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant={log.success ? "secondary" : "destructive"}>{log.success ? "OK" : "Error"}</Badge>
+                  <Badge variant={log.success ? "secondary" : "destructive"}>
+                    {log.success ? "OK" : "Error"}
+                  </Badge>
                   <Badge variant="outline">id: {log.id}</Badge>
                   <Badge variant="outline">páginas: {log.pagesFetched}</Badge>
-                  <Badge variant="outline">activas: {log.activeCountRemote}</Badge>
+                  <Badge variant="outline">
+                    activas: {log.activeCountRemote}
+                  </Badge>
                   <Badge variant="outline">+{log.added}</Badge>
                   <Badge variant="outline">-{log.removed}</Badge>
                   <Badge variant="outline">~{log.refreshed}</Badge>
                 </div>
                 <p className="mt-2 text-xs text-muted-foreground">
-                  Inicio: {new Date(log.startedAt).toLocaleString("es-AR")} · Fin: {new Date(log.finishedAt).toLocaleString("es-AR")}
+                  Inicio: {new Date(log.startedAt).toLocaleString("es-AR")} ·
+                  Fin: {new Date(log.finishedAt).toLocaleString("es-AR")}
                 </p>
-                {log.error ? <p className="mt-1 text-xs text-destructive">{log.error}</p> : null}
+                {log.error ? (
+                  <p className="mt-1 text-xs text-destructive">{log.error}</p>
+                ) : null}
               </article>
             ))}
           </CardContent>
@@ -425,48 +473,83 @@ export default function TokkoPage() {
           <CardHeader>
             <div className="flex flex-wrap gap-2">
               <CardTitle>Resultados</CardTitle>
-              {payload ? <Badge variant="secondary">{payload.resource}</Badge> : null}
-              {payload ? <Badge variant="outline">{items.length} items</Badge> : null}
-              {payload?.id ? <Badge variant="outline">id: {payload.id}</Badge> : null}
-              {payload?.page ? <Badge variant="outline">page: {payload.page}</Badge> : null}
-              {payload?.page_size ? <Badge variant="outline">page_size: {payload.page_size}</Badge> : null}
+              {payload ? (
+                <Badge variant="secondary">{payload.resource}</Badge>
+              ) : null}
+              {payload ? (
+                <Badge variant="outline">{items.length} items</Badge>
+              ) : null}
+              {payload?.id ? (
+                <Badge variant="outline">id: {payload.id}</Badge>
+              ) : null}
+              {payload?.page ? (
+                <Badge variant="outline">page: {payload.page}</Badge>
+              ) : null}
+              {payload?.page_size ? (
+                <Badge variant="outline">page_size: {payload.page_size}</Badge>
+              ) : null}
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
             <div className="rounded-lg border bg-secondary/40 px-4 py-3">
               <p className="text-sm text-muted-foreground">Total general</p>
-              <p className="text-3xl font-bold leading-none">{allItems.length}</p>
-              <p className="mt-3 text-sm text-muted-foreground">Destacadas configuradas en el sitio</p>
-              <p className="text-2xl font-semibold leading-none">{featuredIds.length}</p>
+              <p className="text-3xl font-bold leading-none">
+                {allItems.length}
+              </p>
+              <p className="mt-3 text-sm text-muted-foreground">
+                Destacadas configuradas en el sitio
+              </p>
+              <p className="text-2xl font-semibold leading-none">
+                {featuredIds.length}
+              </p>
             </div>
 
             {items.map((item, index) => (
-              <article key={`${item.id ?? item.reference_code ?? item.name ?? index}`} className="rounded-lg border p-4">
-                <h2 className="font-semibold text-lg">{item.publication_title ?? item.name ?? "Sin título"}</h2>
+              <article
+                key={`${item.id ?? item.reference_code ?? item.name ?? index}`}
+                className="rounded-lg border p-4"
+              >
+                <h2 className="font-semibold text-lg">
+                  {item.publication_title ?? item.name ?? "Sin título"}
+                </h2>
                 <p className="text-sm text-muted-foreground">
                   {item.reference_code ? `Ref: ${item.reference_code} · ` : ""}
                   {item.address ?? "-"}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {item.location?.full_location ?? item.location?.short_location ?? "-"}
+                  {item.location?.full_location ??
+                    item.location?.short_location ??
+                    "-"}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Status: {item.status ?? "-"} {item.deleted_at ? `· deleted_at: ${item.deleted_at}` : ""}
+                  Status: {item.status ?? "-"}{" "}
+                  {item.deleted_at ? `· deleted_at: ${item.deleted_at}` : ""}
                 </p>
                 <label className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
                   <input
                     type="checkbox"
                     className="h-4 w-4 accent-primary"
-                    checked={draftFeaturedIds.includes(typeof item.id === "number" ? item.id : Number(item.id))}
+                    checked={draftFeaturedIds.includes(
+                      typeof item.id === "number" ? item.id : Number(item.id),
+                    )}
                     onChange={() => onToggleFeatured(item)}
-                    disabled={!Number.isInteger(typeof item.id === "number" ? item.id : Number(item.id))}
+                    disabled={
+                      !Number.isInteger(
+                        typeof item.id === "number" ? item.id : Number(item.id),
+                      )
+                    }
                   />
                   Destacar en home
                 </label>
                 <div className="mt-3 flex flex-wrap items-center gap-3">
                   {item.web_url ? (
-                    <a className="text-sm text-primary underline" href={item.web_url} target="_blank" rel="noreferrer">
+                    <a
+                      className="text-sm text-primary underline"
+                      href={item.web_url}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
                       Ver URL
                     </a>
                   ) : null}
@@ -479,7 +562,8 @@ export default function TokkoPage() {
                     <DialogContent className="max-w-5xl">
                       <DialogHeader>
                         <DialogTitle>
-                          {item.publication_title ?? item.name ?? "Detalle"} {item.id ? `#${item.id}` : ""}
+                          {item.publication_title ?? item.name ?? "Detalle"}{" "}
+                          {item.id ? `#${item.id}` : ""}
                         </DialogTitle>
                       </DialogHeader>
                       {(() => {
@@ -488,7 +572,10 @@ export default function TokkoPage() {
                           return null;
                         }
                         return (
-                          <details className="rounded-lg border bg-secondary/40 p-3" open>
+                          <details
+                            className="rounded-lg border bg-secondary/40 p-3"
+                            open
+                          >
                             <summary className="cursor-pointer text-sm font-medium">
                               Imágenes de la propiedad ({propertyImages.length})
                             </summary>
@@ -523,7 +610,9 @@ export default function TokkoPage() {
             ))}
 
             <details>
-              <summary className="cursor-pointer text-sm text-muted-foreground">Ver raw JSON</summary>
+              <summary className="cursor-pointer text-sm text-muted-foreground">
+                Ver raw JSON
+              </summary>
               <pre className="mt-3 max-h-[420px] overflow-auto rounded-lg border bg-secondary p-4 text-xs leading-5">
                 {JSON.stringify(payload?.data ?? null, null, 2)}
               </pre>

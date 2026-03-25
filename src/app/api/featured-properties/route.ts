@@ -7,6 +7,11 @@ const bodySchema = z.object({
   featured: z.boolean(),
 });
 
+const dbPropertyRowSchema = z.object({
+  property_id: z.union([z.number().int(), z.string()]),
+  raw_json: z.unknown(),
+});
+
 async function ensureTable() {
   await sql`
     create table if not exists featured_properties (
@@ -14,6 +19,30 @@ async function ensureTable() {
       created_at timestamptz not null default now()
     )
   `;
+}
+
+function getTokkoKey() {
+  return process.env.TOKKO_API_KEY ?? process.env.NEXT_PUBLIC_TOKKO_API_KEY;
+}
+
+async function fetchTokkoPropertyById(apiKey: string, id: number): Promise<Record<string, unknown> | null> {
+  try {
+    const url = new URL(`https://www.tokkobroker.com/api/v1/property/${id}/`);
+    url.searchParams.set("key", apiKey);
+    url.searchParams.set("lang", "es_ar");
+    url.searchParams.set("format", "json");
+    const res = await fetch(url.toString(), { method: "GET", cache: "no-store", headers: { Accept: "application/json" } });
+    if (!res.ok) {
+      return null;
+    }
+    const json = (await res.json()) as unknown;
+    if (json && typeof json === "object" && !Array.isArray(json)) {
+      return json as Record<string, unknown>;
+    }
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 export async function GET() {
@@ -25,7 +54,45 @@ export async function GET() {
       .parse(rows)
       .map((row) => Number(row.property_id))
       .filter((id) => Number.isInteger(id) && id > 0);
-    return NextResponse.json({ ids }, { status: 200 });
+
+    if (ids.length === 0) {
+      return NextResponse.json({ ids: [], properties: [] }, { status: 200 });
+    }
+
+    const dbRows = await sql`
+      select property_id, raw_json
+      from tokko_active_properties
+      where property_id = any(${ids}::bigint[])
+    `.catch(() => []);
+
+    const dbParsed = z.array(dbPropertyRowSchema).safeParse(dbRows);
+    const dbByIdMap = new Map<number, Record<string, unknown>>();
+    if (dbParsed.success) {
+      for (const row of dbParsed.data) {
+        const id = Number(row.property_id);
+        if (row.raw_json && typeof row.raw_json === "object" && !Array.isArray(row.raw_json)) {
+          dbByIdMap.set(id, row.raw_json as Record<string, unknown>);
+        }
+      }
+    }
+
+    const apiKey = getTokkoKey();
+    const properties: Record<string, unknown>[] = [];
+
+    for (const id of ids) {
+      if (dbByIdMap.has(id)) {
+        properties.push(dbByIdMap.get(id)!);
+        continue;
+      }
+      if (apiKey) {
+        const fetched = await fetchTokkoPropertyById(apiKey, id);
+        if (fetched) {
+          properties.push(fetched);
+        }
+      }
+    }
+
+    return NextResponse.json({ ids, properties }, { status: 200 });
   } catch {
     return NextResponse.json({ error: "No se pudieron obtener las destacadas" }, { status: 500 });
   }
