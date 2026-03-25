@@ -53,6 +53,10 @@ type PropertyImage = {
   alt: string;
 };
 
+function isNonNull<T>(value: T | null): value is T {
+  return value !== null;
+}
+
 function extractPropertyImages(item: TokkoRecord): PropertyImage[] {
   const candidates = [
     item.photos,
@@ -97,7 +101,7 @@ function extractPropertyImages(item: TokkoRecord): PropertyImage[] {
           alt: typeof data.description === "string" && data.description.length > 0 ? data.description : `Imagen ${index + 1}`,
         } satisfies PropertyImage;
       })
-      .filter((value): value is PropertyImage => value !== null);
+      .filter(isNonNull);
 
     if (images.length > 0) {
       return images;
