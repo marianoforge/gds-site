@@ -21,6 +21,23 @@ type FeaturedIdsResponse = {
   ids: number[];
 };
 
+type CronLog = {
+  id: number;
+  startedAt: string;
+  finishedAt: string;
+  success: boolean;
+  pagesFetched: number;
+  activeCountRemote: number;
+  added: number;
+  removed: number;
+  refreshed: number;
+  error: string | null;
+};
+
+type CronLogsResponse = {
+  logs: CronLog[];
+};
+
 type TokkoItem = {
   id?: number;
   publication_title?: string;
@@ -120,6 +137,8 @@ export default function TokkoPage() {
   const [page, setPage] = useState(1);
   const [featuredIds, setFeaturedIds] = useState<number[]>([]);
   const [draftFeaturedIds, setDraftFeaturedIds] = useState<number[]>([]);
+  const [cronLogs, setCronLogs] = useState<CronLog[]>([]);
+  const [loadingCronLogs, setLoadingCronLogs] = useState(false);
   const [payload, setPayload] = useState<TokkoResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [savingFeatured, setSavingFeatured] = useState(false);
@@ -136,6 +155,23 @@ export default function TokkoPage() {
         setDraftFeaturedIds(json.ids);
       }
     } catch {}
+  }, []);
+
+  const loadCronLogs = useCallback(async () => {
+    setLoadingCronLogs(true);
+    try {
+      const res = await fetch("/api/cron/tokko-active-sync/logs?limit=20", { cache: "no-store" });
+      if (!res.ok) {
+        return;
+      }
+      const json = (await res.json()) as CronLogsResponse;
+      if (Array.isArray(json.logs)) {
+        setCronLogs(json.logs);
+      }
+    } catch {
+    } finally {
+      setLoadingCronLogs(false);
+    }
   }, []);
 
 
@@ -207,6 +243,10 @@ export default function TokkoPage() {
   useEffect(() => {
     void loadFeaturedIds();
   }, [loadFeaturedIds]);
+
+  useEffect(() => {
+    void loadCronLogs();
+  }, [loadCronLogs]);
 
   useEffect(() => {
     if (idFilter.trim()) {
@@ -322,7 +362,7 @@ export default function TokkoPage() {
               {loading ? "Cargando..." : "Consultar ID"}
             </Button>
             <Button variant="outline" onClick={() => void saveFeaturedChanges()} disabled={savingFeatured || !hasPendingFeaturedChanges}>
-              {savingFeatured ? "Guardando..." : "Save"}
+              {savingFeatured ? "Guardando..." : "Guardar"}
             </Button>
             {!idFilter.trim() ? (
               <div className="ml-auto flex items-center gap-2">
@@ -347,6 +387,37 @@ export default function TokkoPage() {
                 </Button>
               </div>
             ) : null}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between gap-3">
+              <CardTitle>Logs del cron</CardTitle>
+              <Button variant="outline" size="sm" onClick={() => void loadCronLogs()} disabled={loadingCronLogs}>
+                {loadingCronLogs ? "Actualizando..." : "Actualizar"}
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {cronLogs.length === 0 ? <p className="text-sm text-muted-foreground">Sin logs todavía.</p> : null}
+            {cronLogs.map((log) => (
+              <article key={log.id} className="rounded-lg border p-3 text-sm">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant={log.success ? "secondary" : "destructive"}>{log.success ? "OK" : "Error"}</Badge>
+                  <Badge variant="outline">id: {log.id}</Badge>
+                  <Badge variant="outline">páginas: {log.pagesFetched}</Badge>
+                  <Badge variant="outline">activas: {log.activeCountRemote}</Badge>
+                  <Badge variant="outline">+{log.added}</Badge>
+                  <Badge variant="outline">-{log.removed}</Badge>
+                  <Badge variant="outline">~{log.refreshed}</Badge>
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Inicio: {new Date(log.startedAt).toLocaleString("es-AR")} · Fin: {new Date(log.finishedAt).toLocaleString("es-AR")}
+                </p>
+                {log.error ? <p className="mt-1 text-xs text-destructive">{log.error}</p> : null}
+              </article>
+            ))}
           </CardContent>
         </Card>
 

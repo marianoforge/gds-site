@@ -27,6 +27,20 @@ async function ensureTable() {
       created_at timestamptz not null default now()
     )
   `;
+  await sql`
+    create table if not exists tokko_sync_logs (
+      id bigserial primary key,
+      started_at timestamptz not null,
+      finished_at timestamptz not null,
+      success boolean not null,
+      pages_fetched integer not null default 0,
+      active_count_remote integer not null default 0,
+      added_count integer not null default 0,
+      removed_count integer not null default 0,
+      refreshed_count integer not null default 0,
+      error_message text
+    )
+  `;
 }
 
 async function fetchTokkoPage(apiKey: string, offset: number) {
@@ -73,6 +87,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Falta TOKKO_API_KEY o NEXT_PUBLIC_TOKKO_API_KEY" }, { status: 400 });
   }
 
+  const startedAt = new Date();
   try {
     await ensureTable();
 
@@ -124,10 +139,36 @@ export async function GET(request: Request) {
       await sql`delete from featured_properties where property_id = ${id}`;
     }
 
+    const finishedAt = new Date();
+    const pagesFetched = Math.floor(offset / TOKKO_PAGE_SIZE) + 1;
+    await sql`
+      insert into tokko_sync_logs (
+        started_at,
+        finished_at,
+        success,
+        pages_fetched,
+        active_count_remote,
+        added_count,
+        removed_count,
+        refreshed_count,
+        error_message
+      ) values (
+        ${startedAt.toISOString()}::timestamptz,
+        ${finishedAt.toISOString()}::timestamptz,
+        true,
+        ${pagesFetched},
+        ${remoteIds.length},
+        ${toAdd.length},
+        ${toRemove.length},
+        ${toRefresh.length},
+        null
+      )
+    `;
+
     return NextResponse.json(
       {
         ok: true,
-        pagesFetched: Math.floor(offset / TOKKO_PAGE_SIZE) + 1,
+        pagesFetched,
         activeCountRemote: remoteIds.length,
         added: toAdd.length,
         removed: toRemove.length,
@@ -137,6 +178,33 @@ export async function GET(request: Request) {
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error de sync";
+    const finishedAt = new Date();
+    try {
+      await ensureTable();
+      await sql`
+        insert into tokko_sync_logs (
+          started_at,
+          finished_at,
+          success,
+          pages_fetched,
+          active_count_remote,
+          added_count,
+          removed_count,
+          refreshed_count,
+          error_message
+        ) values (
+          ${startedAt.toISOString()}::timestamptz,
+          ${finishedAt.toISOString()}::timestamptz,
+          false,
+          0,
+          0,
+          0,
+          0,
+          0,
+          ${message}
+        )
+      `;
+    } catch {}
     return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
 }
