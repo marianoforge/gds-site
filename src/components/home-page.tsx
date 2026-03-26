@@ -9,12 +9,14 @@ import PropertiesSection from "@/components/PropertiesSection";
 import ServicesSection from "@/components/ServicesSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import type { GooglePlaceReviews } from "@/lib/google-reviews";
+import type { FeaturedProperty } from "@/lib/featured-properties";
 
 type HomePageProps = {
   googleReviews: GooglePlaceReviews | null;
+  featuredProperties: FeaturedProperty[];
 };
 
-export default function HomePage({ googleReviews }: HomePageProps) {
+export default function HomePage({ googleReviews, featuredProperties }: HomePageProps) {
   return (
     <div className="min-h-screen">
       <Navbar
@@ -23,7 +25,7 @@ export default function HomePage({ googleReviews }: HomePageProps) {
       />
       <HeroSection />
       <AboutSection />
-      <PropertiesSection />
+      <PropertiesSection properties={featuredProperties} />
       <ServicesSection />
       <TestimonialsSection googleReviews={googleReviews} />
       <ContactSection />
