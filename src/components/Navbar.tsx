@@ -1,19 +1,29 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { Menu, X, Phone } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { usePathname } from "next/navigation";
 
 const navLinks = [
-  { label: "Inicio", href: "#inicio" },
-  { label: "Nosotros", href: "#nosotros" },
-  { label: "Propiedades", href: "#propiedades" },
-  { label: "Servicios", href: "#servicios" },
-  { label: "Testimonios", href: "#testimonios" },
-  { label: "Contacto", href: "#contacto" },
+  { label: "Inicio", href: "/#inicio" },
+  { label: "Nosotros", href: "/#nosotros" },
+  { label: "Propiedades", href: "/#propiedades" },
+  { label: "Servicios", href: "/#servicios" },
+  { label: "Testimonios", href: "/#testimonios" },
+  { label: "Contacto", href: "/#contacto" },
 ];
 
-const Navbar = () => {
+type NavbarProps = {
+  forceSolid?: boolean;
+};
+
+const Navbar = ({ forceSolid = false }: NavbarProps) => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
+  const isInternalPage = pathname !== "/";
+  const isSolid = forceSolid || scrolled || isInternalPage;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -27,18 +37,18 @@ const Navbar = () => {
       animate={{ y: 0 }}
       transition={{ duration: 0.5 }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
+        isSolid
           ? "bg-card/95 backdrop-blur-md shadow-card border-b border-border"
           : "bg-transparent"
       }`}
     >
       <div className="container mx-auto flex items-center justify-between py-4 px-4 lg:px-8">
         {/* Logo */}
-        <a href="#inicio" className="flex flex-col leading-none">
-          <span className={`text-xl font-bold tracking-tight transition-colors ${scrolled ? "text-primary" : "text-primary-foreground"}`}>
+        <a href="/#inicio" className="flex flex-col leading-none">
+          <span className={`text-xl font-bold tracking-tight transition-colors ${isSolid ? "text-primary" : "text-primary-foreground"}`}>
             GUSTAVO DE SIMONE
           </span>
-          <span className={`text-[10px] font-medium tracking-[0.35em] uppercase transition-colors ${scrolled ? "text-muted-foreground" : "text-primary-foreground/70"}`}>
+          <span className={`text-[10px] font-medium tracking-[0.35em] uppercase transition-colors ${isSolid ? "text-muted-foreground" : "text-primary-foreground/70"}`}>
             Soluciones Inmobiliarias
           </span>
         </a>
@@ -50,7 +60,7 @@ const Navbar = () => {
               key={link.href}
               href={link.href}
               className={`text-sm font-medium transition-colors hover:text-accent ${
-                scrolled ? "text-foreground" : "text-primary-foreground/90"
+                isSolid ? "text-foreground" : "text-primary-foreground/90"
               }`}
             >
               {link.label}
@@ -70,7 +80,7 @@ const Navbar = () => {
         {/* Mobile Toggle */}
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className={`lg:hidden p-2 rounded-lg transition-colors ${scrolled ? "text-foreground" : "text-primary-foreground"}`}
+          className={`lg:hidden p-2 rounded-lg transition-colors ${isSolid ? "text-foreground" : "text-primary-foreground"}`}
         >
           {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { sql } from "@/lib/db";
 import { isTokkoActive } from "@/lib/tokko";
+import { buildPropertyIndexRow } from "@/lib/tokko-property-index";
 
 const TOKKO_PAGE_SIZE = 50;
 
@@ -41,6 +42,29 @@ async function ensureTable() {
       error_message text
     )
   `;
+  await sql`
+    create table if not exists tokko_property_index (
+      property_id bigint primary key,
+      slug text not null,
+      title text not null,
+      type text not null,
+      operation text not null,
+      location text not null,
+      bedrooms integer not null default 0,
+      bathrooms integer not null default 0,
+      parking integer not null default 0,
+      area numeric not null default 0,
+      price_value numeric not null default 0,
+      price_label text not null,
+      main_image text not null default '',
+      synced_at timestamptz not null default now()
+    )
+  `;
+  await sql`create index if not exists idx_tokko_property_index_location on tokko_property_index (location)`;
+  await sql`create index if not exists idx_tokko_property_index_type on tokko_property_index (type)`;
+  await sql`create index if not exists idx_tokko_property_index_bedrooms on tokko_property_index (bedrooms)`;
+  await sql`create index if not exists idx_tokko_property_index_price on tokko_property_index (price_value)`;
+  await sql`create index if not exists idx_tokko_property_index_synced_at on tokko_property_index (synced_at desc)`;
 }
 
 async function fetchTokkoPage(apiKey: string, offset: number) {
@@ -126,16 +150,44 @@ export async function GET(request: Request) {
     const toRemove = dbIds.filter((id) => !remoteSet.has(id));
     const toRefresh = remoteIds.filter((id) => dbSet.has(id));
 
-    for (const id of toAdd) {
-      const raw = JSON.stringify(activeById.get(id));
+    for (let index = 0; index < remoteIds.length; index += 1) {
+      const id = remoteIds[index];
+      const item = activeById.get(id);
+      if (!item) {
+        continue;
+      }
+      const raw = JSON.stringify(item);
       await sql`insert into tokko_active_properties (property_id, raw_json, synced_at) values (${id}, ${raw}::jsonb, now()) on conflict (property_id) do update set raw_json = excluded.raw_json, synced_at = now()`;
-    }
-    for (const id of toRefresh) {
-      const raw = JSON.stringify(activeById.get(id));
-      await sql`update tokko_active_properties set raw_json = ${raw}::jsonb, synced_at = now() where property_id = ${id}`;
+      const mapped = buildPropertyIndexRow(item, index + 1);
+      if (!mapped) {
+        continue;
+      }
+      await sql`
+        insert into tokko_property_index (
+          property_id, slug, title, type, operation, location, bedrooms, bathrooms, parking, area, price_value, price_label, main_image, synced_at
+        ) values (
+          ${mapped.propertyId}, ${mapped.slug}, ${mapped.title}, ${mapped.type}, ${mapped.operation}, ${mapped.location}, ${mapped.bedrooms},
+          ${mapped.bathrooms}, ${mapped.parking}, ${mapped.area}, ${mapped.priceValue}, ${mapped.priceLabel}, ${mapped.mainImage}, now()
+        )
+        on conflict (property_id) do update set
+          slug = excluded.slug,
+          title = excluded.title,
+          type = excluded.type,
+          operation = excluded.operation,
+          location = excluded.location,
+          bedrooms = excluded.bedrooms,
+          bathrooms = excluded.bathrooms,
+          parking = excluded.parking,
+          area = excluded.area,
+          price_value = excluded.price_value,
+          price_label = excluded.price_label,
+          main_image = excluded.main_image,
+          synced_at = now()
+      `;
     }
     for (const id of toRemove) {
       await sql`delete from tokko_active_properties where property_id = ${id}`;
+      await sql`delete from tokko_property_index where property_id = ${id}`;
       await sql`delete from featured_properties where property_id = ${id}`;
     }
 

@@ -21,30 +21,6 @@ async function ensureTable() {
   `;
 }
 
-function getTokkoKey() {
-  return process.env.TOKKO_API_KEY ?? process.env.NEXT_PUBLIC_TOKKO_API_KEY;
-}
-
-async function fetchTokkoPropertyById(apiKey: string, id: number): Promise<Record<string, unknown> | null> {
-  try {
-    const url = new URL(`https://www.tokkobroker.com/api/v1/property/${id}/`);
-    url.searchParams.set("key", apiKey);
-    url.searchParams.set("lang", "es_ar");
-    url.searchParams.set("format", "json");
-    const res = await fetch(url.toString(), { method: "GET", cache: "no-store", headers: { Accept: "application/json" } });
-    if (!res.ok) {
-      return null;
-    }
-    const json = (await res.json()) as unknown;
-    if (json && typeof json === "object" && !Array.isArray(json)) {
-      return json as Record<string, unknown>;
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
-
 export async function GET() {
   try {
     await ensureTable();
@@ -76,19 +52,11 @@ export async function GET() {
       }
     }
 
-    const apiKey = getTokkoKey();
     const properties: Record<string, unknown>[] = [];
 
     for (const id of ids) {
       if (dbByIdMap.has(id)) {
         properties.push(dbByIdMap.get(id)!);
-        continue;
-      }
-      if (apiKey) {
-        const fetched = await fetchTokkoPropertyById(apiKey, id);
-        if (fetched) {
-          properties.push(fetched);
-        }
       }
     }
 

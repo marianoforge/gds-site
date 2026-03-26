@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { BedDouble, Bath, Car, Maximize } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { siteImages } from "@/lib/site-media";
 import { isTokkoActive } from "@/lib/tokko";
 
@@ -164,6 +165,10 @@ function mapTokkoToCard(
   };
 }
 
+function toPropertySlug(propertyId: number, index: number): string {
+  return `${propertyId}-${index + 1}`;
+}
+
 const PropertiesSection = () => {
   const [tokkoItems, setTokkoItems] = useState<FeaturedProperty[]>([]);
   const [featuredItems, setFeaturedItems] = useState<FeaturedProperty[]>([]);
@@ -204,11 +209,6 @@ const PropertiesSection = () => {
         if (dbRes.ok) {
           const dbJson = (await dbRes.json()) as TokkoListResponse;
           objects = Array.isArray(dbJson?.data?.objects) ? dbJson.data.objects : [];
-        }
-        if (objects.length === 0) {
-          const res = await fetch("/api/tokko-debug?resource=property&page=1&lang=es_ar&format=json", { cache: "no-store" });
-          const json = (await res.json()) as TokkoListResponse;
-          objects = Array.isArray(json?.data?.objects) ? json.data.objects : [];
         }
         const mapped = objects.filter(isTokkoActive).map(mapTokkoToCard);
         if (mounted) {
@@ -279,60 +279,65 @@ const PropertiesSection = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: index * 0.15 }}
-                  className="group flex h-full flex-col bg-card rounded-2xl overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-300 cursor-pointer"
+                  className="group h-full"
                 >
-                  <div className="relative h-64 overflow-hidden">
-                    <img
-                      src={property.image}
-                      alt={property.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      loading="lazy"
-                      width={800}
-                      height={600}
-                    />
-                    <div className="absolute top-4 left-4">
-                      <span className="bg-primary text-primary-foreground text-xs font-bold px-3 py-1.5 rounded-lg uppercase tracking-wide">
-                        {property.type}
-                      </span>
-                    </div>
-                    <div className="absolute top-4 right-4">
-                      <span className="bg-accent text-accent-foreground text-xs font-bold px-3 py-1.5 rounded-lg">
-                        {property.isFeatured ? "Destacado" : "Disponible"}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-1 flex-col p-6">
-                    <h3 className="mb-3 min-h-14 font-bold text-foreground text-lg group-hover:text-primary transition-colors line-clamp-2">
-                      {property.title}
-                    </h3>
-
-                    <div className="mb-4 flex items-center gap-4 text-muted-foreground text-sm">
-                      <span className="flex items-center gap-1.5">
-                        <BedDouble className="w-4 h-4" /> {property.beds}
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <Bath className="w-4 h-4" /> {property.baths}
-                      </span>
-                      {property.parking > 0 && (
-                        <span className="flex items-center gap-1.5">
-                          <Car className="w-4 h-4" /> {property.parking}
+                  <Link
+                    href={`/propiedad/${toPropertySlug(property.propertyId, index)}`}
+                    className="flex h-full flex-col overflow-hidden rounded-2xl bg-card shadow-card transition-all duration-300 hover:shadow-card-hover"
+                  >
+                    <div className="relative h-64 overflow-hidden">
+                      <img
+                        src={property.image}
+                        alt={property.title}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        loading="lazy"
+                        width={800}
+                        height={600}
+                      />
+                      <div className="absolute top-4 left-4">
+                        <span className="rounded-lg bg-primary px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-primary-foreground">
+                          {property.type}
                         </span>
-                      )}
-                      <span className="flex items-center gap-1.5">
-                        <Maximize className="w-4 h-4" /> {property.area}
-                      </span>
+                      </div>
+                      <div className="absolute top-4 right-4">
+                        <span className="rounded-lg bg-accent px-3 py-1.5 text-xs font-bold text-accent-foreground">
+                          {property.isFeatured ? "Destacado" : "Disponible"}
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="mt-auto flex items-center justify-between border-t border-border pt-4">
-                      <p className="text-2xl font-bold text-primary">
-                        {property.price}
-                      </p>
-                      <span className="text-sm font-medium text-accent hover:underline">
-                        Ver más →
-                      </span>
+                    <div className="flex flex-1 flex-col p-6">
+                      <h3 className="mb-3 min-h-14 text-lg font-bold text-foreground transition-colors group-hover:text-primary line-clamp-2">
+                        {property.title}
+                      </h3>
+
+                      <div className="mb-4 flex items-center gap-4 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1.5">
+                          <BedDouble className="h-4 w-4" /> {property.beds}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <Bath className="h-4 w-4" /> {property.baths}
+                        </span>
+                        {property.parking > 0 && (
+                          <span className="flex items-center gap-1.5">
+                            <Car className="h-4 w-4" /> {property.parking}
+                          </span>
+                        )}
+                        <span className="flex items-center gap-1.5">
+                          <Maximize className="h-4 w-4" /> {property.area}
+                        </span>
+                      </div>
+
+                      <div className="mt-auto flex items-center justify-between border-t border-border pt-4">
+                        <p className="text-2xl font-bold text-primary">
+                          {property.price}
+                        </p>
+                        <span className="text-sm font-medium text-accent hover:underline">
+                          Ver más →
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  </Link>
                 </motion.div>
               ))}
         </div>
@@ -343,12 +348,12 @@ const PropertiesSection = () => {
           viewport={{ once: true }}
           className="text-center mt-12"
         >
-          <a
-            href="#"
+          <Link
+            href="/propiedades"
             className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-8 py-3.5 rounded-xl font-semibold hover:bg-primary-dark transition-colors"
           >
             Ver todas las propiedades
-          </a>
+          </Link>
         </motion.div>
       </div>
     </section>
