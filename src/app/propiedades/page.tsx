@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Bath, BedDouble, Car, Home, MapPin, Maximize, Search } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -203,13 +204,25 @@ function FiltersBar({
 }
 
 export default function PropertiesPage() {
-  const [location, setLocation] = useState("Todas las zonas");
-  const [type, setType] = useState("Todos");
-  const [bedrooms, setBedrooms] = useState("Cualquiera");
+  const searchParams = useSearchParams();
+
+  const initialLocation = LOCATION_OPTIONS.includes(searchParams.get("ubicacion") ?? "")
+    ? (searchParams.get("ubicacion") as string)
+    : "Todas las zonas";
+  const initialType = TYPE_OPTIONS.includes(searchParams.get("tipo") ?? "")
+    ? (searchParams.get("tipo") as string)
+    : "Todos";
+  const initialBedrooms = BEDROOM_OPTIONS.includes(searchParams.get("dormitorios") ?? "")
+    ? (searchParams.get("dormitorios") as string)
+    : "Cualquiera";
+
+  const [location, setLocation] = useState(initialLocation);
+  const [type, setType] = useState(initialType);
+  const [bedrooms, setBedrooms] = useState(initialBedrooms);
   const [submitted, setSubmitted] = useState({
-    location: "Todas las zonas",
-    type: "Todos",
-    bedrooms: "Cualquiera",
+    location: initialLocation,
+    type: initialType,
+    bedrooms: initialBedrooms,
   });
   const [items, setItems] = useState<PropertyItem[]>([]);
   const [page, setPage] = useState(0);
@@ -217,6 +230,8 @@ export default function PropertiesPage() {
   const [loading, setLoading] = useState(false);
   const [loadedOnce, setLoadedOnce] = useState(false);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const loadingRef = useRef(false);
+  const pageRef = useRef(0);
 
   const key = useMemo(
     () => `${submitted.location}-${submitted.type}-${submitted.bedrooms}`,
@@ -226,6 +241,7 @@ export default function PropertiesPage() {
   useEffect(() => {
     let cancelled = false;
     const loadFirstPage = async () => {
+      loadingRef.current = true;
       setLoading(true);
       try {
         const params = new URLSearchParams({
@@ -247,6 +263,7 @@ export default function PropertiesPage() {
         };
         if (!cancelled) {
           setItems(Array.isArray(json.items) ? json.items : []);
+          pageRef.current = 1;
           setPage(1);
           setHasMore(Boolean(json.hasMore));
           setLoadedOnce(true);
@@ -259,6 +276,7 @@ export default function PropertiesPage() {
         }
       } finally {
         if (!cancelled) {
+          loadingRef.current = false;
           setLoading(false);
         }
       }
@@ -270,22 +288,24 @@ export default function PropertiesPage() {
   }, [key, submitted]);
 
   useEffect(() => {
-    if (!sentinelRef.current || !hasMore || loading) {
+    if (!sentinelRef.current || !hasMore) {
       return;
     }
     const element = sentinelRef.current;
     const observer = new IntersectionObserver(
       (entries) => {
         const first = entries[0];
-        if (!first?.isIntersecting || loading || !hasMore) {
+        if (!first?.isIntersecting || loadingRef.current || !hasMore) {
           return;
         }
+        loadingRef.current = true;
         setLoading(true);
+        const currentPage = pageRef.current;
         const params = new URLSearchParams({
           location: submitted.location,
           type: submitted.type,
           bedrooms: submitted.bedrooms,
-          page: String(page),
+          page: String(currentPage),
           pageSize: String(PAGE_SIZE),
         });
         fetch(`/api/properties/search?${params.toString()}`, { cache: "no-store" })
@@ -295,14 +315,20 @@ export default function PropertiesPage() {
             }
             const json = (await res.json()) as { items?: PropertyItem[]; hasMore?: boolean };
             const nextItems = Array.isArray(json.items) ? json.items : [];
-            setItems((prev) => [...prev, ...nextItems]);
-            setPage((prev) => prev + 1);
+            setItems((prev) => {
+              const seenIds = new Set(prev.map((p) => p.propertyId));
+              const unique = nextItems.filter((p) => !seenIds.has(p.propertyId));
+              return [...prev, ...unique];
+            });
+            pageRef.current = currentPage + 1;
+            setPage(currentPage + 1);
             setHasMore(Boolean(json.hasMore));
           })
           .catch(() => {
             setHasMore(false);
           })
           .finally(() => {
+            loadingRef.current = false;
             setLoading(false);
           });
       },
@@ -312,7 +338,7 @@ export default function PropertiesPage() {
     return () => {
       observer.disconnect();
     };
-  }, [hasMore, loading, page, submitted]);
+  }, [hasMore, submitted]);
 
   return (
     <div className="min-h-screen bg-secondary">

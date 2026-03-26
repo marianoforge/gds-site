@@ -1,8 +1,30 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Search, MapPin, Home, BedDouble } from "lucide-react";
 import { motion } from "framer-motion";
 import { siteImages } from "@/lib/site-media";
 
+const LOCATION_OPTIONS = ["Todas las zonas", "Palermo", "Belgrano", "Recoleta", "Núñez", "Caballito"];
+const TYPE_OPTIONS = ["Todos", "Departamento", "Casa", "PH", "Terreno"];
+const BEDROOM_OPTIONS = ["Cualquiera", "1", "2", "3", "4+"];
+
 const HeroSection = () => {
+  const router = useRouter();
+  const [location, setLocation] = useState("Todas las zonas");
+  const [type, setType] = useState("Todos");
+  const [bedrooms, setBedrooms] = useState("Cualquiera");
+
+  const handleSearch = () => {
+    const params = new URLSearchParams({
+      ubicacion: location,
+      tipo: type,
+      dormitorios: bedrooms,
+    });
+    router.push(`/propiedades?${params.toString()}`);
+  };
+
   return (
     <section id="inicio" className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image */}
@@ -48,13 +70,12 @@ const HeroSection = () => {
               <MapPin className="w-5 h-5 text-primary shrink-0" />
               <div className="flex flex-col w-full">
                 <span className="text-xs text-muted-foreground font-medium">Ubicación</span>
-                <select className="bg-transparent text-foreground text-sm font-medium outline-none cursor-pointer">
-                  <option>Todas las zonas</option>
-                  <option>Palermo</option>
-                  <option>Belgrano</option>
-                  <option>Recoleta</option>
-                  <option>Núñez</option>
-                  <option>Caballito</option>
+                <select
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  className="bg-transparent text-foreground text-sm font-medium outline-none cursor-pointer"
+                >
+                  {LOCATION_OPTIONS.map((opt) => <option key={opt}>{opt}</option>)}
                 </select>
               </div>
             </div>
@@ -63,12 +84,12 @@ const HeroSection = () => {
               <Home className="w-5 h-5 text-primary shrink-0" />
               <div className="flex flex-col w-full">
                 <span className="text-xs text-muted-foreground font-medium">Tipo</span>
-                <select className="bg-transparent text-foreground text-sm font-medium outline-none cursor-pointer">
-                  <option>Todos</option>
-                  <option>Departamento</option>
-                  <option>Casa</option>
-                  <option>PH</option>
-                  <option>Terreno</option>
+                <select
+                  value={type}
+                  onChange={(e) => setType(e.target.value)}
+                  className="bg-transparent text-foreground text-sm font-medium outline-none cursor-pointer"
+                >
+                  {TYPE_OPTIONS.map((opt) => <option key={opt}>{opt}</option>)}
                 </select>
               </div>
             </div>
@@ -77,17 +98,20 @@ const HeroSection = () => {
               <BedDouble className="w-5 h-5 text-primary shrink-0" />
               <div className="flex flex-col w-full">
                 <span className="text-xs text-muted-foreground font-medium">Dormitorios</span>
-                <select className="bg-transparent text-foreground text-sm font-medium outline-none cursor-pointer">
-                  <option>Cualquiera</option>
-                  <option>1</option>
-                  <option>2</option>
-                  <option>3</option>
-                  <option>4+</option>
+                <select
+                  value={bedrooms}
+                  onChange={(e) => setBedrooms(e.target.value)}
+                  className="bg-transparent text-foreground text-sm font-medium outline-none cursor-pointer"
+                >
+                  {BEDROOM_OPTIONS.map((opt) => <option key={opt}>{opt}</option>)}
                 </select>
               </div>
             </div>
 
-            <button className="flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-xl px-6 py-3 font-semibold text-sm hover:bg-primary-dark transition-colors">
+            <button
+              onClick={handleSearch}
+              className="flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-xl px-6 py-3 font-semibold text-sm hover:bg-primary-dark transition-colors"
+            >
               <Search className="w-5 h-5" />
               Buscar
             </button>
