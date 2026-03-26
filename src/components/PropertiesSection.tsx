@@ -80,7 +80,7 @@ const PropertiesSection = ({ properties }: PropertiesSectionProps) => {
                       </div>
                       <div className="absolute top-4 right-4">
                         <span className="rounded-lg bg-accent px-3 py-1.5 text-xs font-bold text-accent-foreground">
-                          Disponible
+                          {property.isFeatured ? "Destacado" : "Disponible"}
                         </span>
                       </div>
                     </div>
