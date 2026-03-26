@@ -74,8 +74,7 @@ export async function getRelatedProperties(
     }
     return parsed.data
       .map((row) => tokkoPropertySchema.safeParse(row.raw_json))
-      .filter((item): item is z.SafeParseSuccess<TokkoPropertyRecord> => item.success)
-      .map((item) => item.data);
+      .flatMap((item) => (item.success ? [item.data] : []));
   } catch {
     return [];
   }

@@ -7,9 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
     "reindex:property-index": "curl -sS -X POST -H \"Authorization: Bearer $CRON_SECRET\" \"${SITE_URL:-http://localhost:3000}/api/admin/reindex-property-index\"",
     "sync:tokko": "curl -sS -H \"Authorization: Bearer $CRON_SECRET\" \"${SITE_URL:-http://localhost:3000}/api/cron/tokko-active-sync\"",
-    "sync:all": "npm run reindex:property-index && npm run sync:tokko"
+    "sync:all": "npm run reindex:property-index && npm run sync:tokko",
+    "prepare": "husky"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -73,6 +75,7 @@
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
+    "husky": "^9.1.7",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
