@@ -110,7 +110,7 @@ const HeroSection = () => {
 
             <button
               onClick={handleSearch}
-              className="flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-xl px-6 py-3 font-semibold text-sm hover:bg-primary-dark transition-colors"
+              className="flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-xl px-6 py-3 font-semibold text-sm hover:bg-primary-dark transition-colors cursor-pointer"
             >
               <Search className="w-5 h-5" />
               Buscar

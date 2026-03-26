@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "reindex:property-index": "curl -sS -X POST -H \"Authorization: Bearer $CRON_SECRET\" \"${SITE_URL:-http://localhost:3000}/api/admin/reindex-property-index\"",
     "sync:tokko": "curl -sS -H \"Authorization: Bearer $CRON_SECRET\" \"${SITE_URL:-http://localhost:3000}/api/cron/tokko-active-sync\"",
-    "sync:all": "npm run reindex:property-index && npm run sync:tokko",
+    "sync:google-reviews": "curl -sS -H \"Authorization: Bearer $CRON_SECRET\" \"${SITE_URL:-http://localhost:3000}/api/cron/sync-google-reviews\"",
+    "sync:all": "npm run reindex:property-index && npm run sync:tokko && npm run sync:google-reviews",
     "prepare": "husky"
   },
   "dependencies": {

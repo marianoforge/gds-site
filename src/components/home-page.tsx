@@ -8,16 +8,24 @@ import Navbar from "@/components/Navbar";
 import PropertiesSection from "@/components/PropertiesSection";
 import ServicesSection from "@/components/ServicesSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
+import type { GooglePlaceReviews } from "@/lib/google-reviews";
 
-export default function HomePage() {
+type HomePageProps = {
+  googleReviews: GooglePlaceReviews | null;
+};
+
+export default function HomePage({ googleReviews }: HomePageProps) {
   return (
     <div className="min-h-screen">
-      <Navbar />
+      <Navbar
+        googleRating={googleReviews?.rating}
+        googleTotalReviews={googleReviews?.totalReviews}
+      />
       <HeroSection />
       <AboutSection />
       <PropertiesSection />
       <ServicesSection />
-      <TestimonialsSection />
+      <TestimonialsSection googleReviews={googleReviews} />
       <ContactSection />
       <Footer />
     </div>
