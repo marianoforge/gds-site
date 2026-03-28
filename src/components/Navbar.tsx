@@ -77,7 +77,7 @@ const Navbar = ({ forceSolid = false, googleRating, googleTotalReviews }: Navbar
               href={GOOGLE_MAPS_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className={`flex items-center gap-2.5 px-3.5 py-2 rounded-xl border transition-all hover:scale-105 ${
+              className={`flex items-center gap-2.5 px-3.5 py-2.5 h-[42px] rounded-xl border transition-all hover:scale-105 ${
                 isSolid
                   ? "border-border bg-secondary/80 hover:border-accent/40"
                   : "border-primary-foreground/20 bg-primary-foreground/10 hover:bg-primary-foreground/15"
@@ -109,7 +109,7 @@ const Navbar = ({ forceSolid = false, googleRating, googleTotalReviews }: Navbar
             href="https://wa.me/+5491130601512"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 bg-accent text-accent-foreground px-5 py-2.5 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity"
+            className="flex items-center gap-2 bg-accent text-accent-foreground px-5 h-[42px] rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity"
           >
             <Phone className="w-4 h-4" />
             Contactar
