@@ -401,7 +401,7 @@ export default async function PropertyDetailPage({
 
               {branchContact.email || branchPhoneDigits ? (
                 <div className="mt-6 border-t border-border pt-6">
-                  <p className="text-sm font-semibold text-foreground">Contactate con el asesor</p>
+                  <p className="text-sm font-semibold text-foreground">Para más información contactanos</p>
                   <div className="mt-4 flex flex-wrap items-center gap-3">
                     {branchContact.email ? (
                       <a
