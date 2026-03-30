@@ -10,17 +10,56 @@ const ContactSection = () => {
     whatsapp: "",
     mensaje: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const msg = encodeURIComponent(
-      `Hola, soy ${formData.nombre} ${formData.apellido}. ${formData.mensaje}`
-    );
-    window.open(`https://wa.me/+5491130601512?text=${msg}`, "_blank");
+    setSubmitError(null);
+    setSubmitMessage(null);
+    const endpoint = process.env.NEXT_PUBLIC_FORMSPREE_ENDPOINT;
+    if (!endpoint) {
+      setSubmitError("Falta configurar NEXT_PUBLIC_FORMSPREE_ENDPOINT");
+      return;
+    }
+    try {
+      setIsSubmitting(true);
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          nombre: formData.nombre,
+          apellido: formData.apellido,
+          email: formData.email,
+          whatsapp: formData.whatsapp,
+          mensaje: formData.mensaje,
+        }),
+      });
+      if (!res.ok) {
+        setSubmitError("No pudimos enviar el formulario. Intentá nuevamente.");
+        return;
+      }
+      setSubmitMessage("Mensaje enviado. Te vamos a contactar a la brevedad.");
+      setFormData({
+        nombre: "",
+        apellido: "",
+        email: "",
+        whatsapp: "",
+        mensaje: "",
+      });
+    } catch {
+      setSubmitError("No pudimos enviar el formulario. Intentá nuevamente.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -147,11 +186,14 @@ const ContactSection = () => {
             </div>
             <button
               type="submit"
-              className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-xl px-6 py-3.5 font-semibold hover:bg-primary-dark transition-colors"
+              disabled={isSubmitting}
+              className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-xl px-6 py-3.5 font-semibold hover:bg-primary-dark transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
             >
               <Send className="w-5 h-5" />
-              Enviar Mensaje
+              {isSubmitting ? "Enviando..." : "Enviar Mensaje"}
             </button>
+            {submitMessage ? <p className="text-sm text-primary">{submitMessage}</p> : null}
+            {submitError ? <p className="text-sm text-destructive">{submitError}</p> : null}
           </motion.form>
         </div>
       </div>
