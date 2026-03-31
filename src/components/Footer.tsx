@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { MapPin, Phone } from "lucide-react";
+import { BOOK_LINKS } from "@/lib/book-links";
 
 function InstagramIcon({ className }: { className?: string }) {
   return (
@@ -24,7 +26,7 @@ const Footer = () => {
   return (
     <footer className="bg-navy text-primary-foreground/80 py-16">
       <div className="container mx-auto px-4 lg:px-8">
-        <div className="grid md:grid-cols-3 gap-12 mb-12">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
           {/* Brand */}
           <div>
             <h3 className="text-xl font-bold text-primary-foreground mb-2">GUSTAVO DE SIMONE</h3>
@@ -38,10 +40,33 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold text-primary-foreground mb-4">Navegación</h4>
             <div className="space-y-2">
-              {["Inicio", "Nosotros", "Propiedades", "Servicios", "Testimonios", "Contacto"].map((link) => (
-                <a key={link} href={`#${link.toLowerCase()}`} className="block text-sm text-primary-foreground/50 hover:text-accent transition-colors">
-                  {link}
+              {[
+                ["Inicio", "/#inicio"],
+                ["Nosotros", "/#nosotros"],
+                ["Propiedades", "/#propiedades"],
+                ["Todas las propiedades", "/propiedades"],
+                ["Servicios", "/#servicios"],
+                ["Testimonios", "/#testimonios"],
+                ["Contacto", "/#contacto"],
+              ].map(([label, href]) => (
+                <a key={href} href={href} className="block text-sm text-primary-foreground/50 hover:text-accent transition-colors">
+                  {label}
                 </a>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h4 className="font-semibold text-primary-foreground mb-4">Libros</h4>
+            <div className="space-y-2">
+              {BOOK_LINKS.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="block text-sm text-primary-foreground/50 hover:text-accent transition-colors"
+                >
+                  {item.label}
+                </Link>
               ))}
             </div>
           </div>

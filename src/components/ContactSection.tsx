@@ -22,14 +22,9 @@ const ContactSection = () => {
     e.preventDefault();
     setSubmitError(null);
     setSubmitMessage(null);
-    const endpoint = process.env.NEXT_PUBLIC_FORMSPREE_ENDPOINT;
-    if (!endpoint) {
-      setSubmitError("Falta configurar NEXT_PUBLIC_FORMSPREE_ENDPOINT");
-      return;
-    }
     try {
       setIsSubmitting(true);
-      const res = await fetch(endpoint, {
+      const res = await fetch("/api/contact", {
         method: "POST",
         headers: {
           Accept: "application/json",

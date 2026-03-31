@@ -1,15 +1,26 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Menu, X, Phone } from "lucide-react";
+import Link from "next/link";
+import { ChevronDown, Menu, Phone, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { BOOK_LINKS } from "@/lib/book-links";
 
-const navLinks = [
+const navLinksBeforeBooks = [
   { label: "Inicio", href: "/#inicio" },
   { label: "Nosotros", href: "/#nosotros" },
   { label: "Propiedades", href: "/#propiedades" },
   { label: "Servicios", href: "/#servicios" },
+];
+
+const navLinksAfterBooks = [
   { label: "Testimonios", href: "/#testimonios" },
   { label: "Contacto", href: "/#contacto" },
 ];
@@ -60,7 +71,37 @@ const Navbar = ({ forceSolid = false, googleRating, googleTotalReviews }: Navbar
 
         {/* Desktop Links */}
         <div className="hidden lg:flex items-center gap-8">
-          {navLinks.map((link) => (
+          {navLinksBeforeBooks.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              className={`text-sm font-medium transition-colors hover:text-accent ${
+                isSolid ? "text-foreground" : "text-primary-foreground/90"
+              }`}
+            >
+              {link.label}
+            </a>
+          ))}
+
+          <DropdownMenu modal={false}>
+            <DropdownMenuTrigger
+              className={`inline-flex shrink-0 items-center gap-0.5 border-0 bg-transparent p-0 text-sm font-medium outline-none transition-colors hover:text-accent data-[state=open]:text-accent ${
+                isSolid ? "text-foreground" : "text-primary-foreground/90"
+              }`}
+            >
+              Libros
+              <ChevronDown className="h-4 w-4 shrink-0 opacity-80" aria-hidden />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" sideOffset={8} className="min-w-[20rem]">
+              {BOOK_LINKS.map((item) => (
+                <DropdownMenuItem key={item.href} asChild>
+                  <Link href={item.href}>{item.label}</Link>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {navLinksAfterBooks.map((link) => (
             <a
               key={link.href}
               href={link.href}
@@ -134,8 +175,29 @@ const Navbar = ({ forceSolid = false, googleRating, googleTotalReviews }: Navbar
             exit={{ opacity: 0, height: 0 }}
             className="lg:hidden bg-card border-b border-border overflow-hidden"
           >
-            <div className="container mx-auto py-4 px-4 flex flex-col gap-3">
-              {navLinks.map((link) => (
+            <div className="container mx-auto py-4 px-4 flex flex-col gap-1">
+              {navLinksBeforeBooks.map((link) => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileOpen(false)}
+                  className="text-foreground text-base font-medium py-2 hover:text-primary transition-colors"
+                >
+                  {link.label}
+                </a>
+              ))}
+              <p className="text-muted-foreground pt-2 text-xs font-semibold uppercase tracking-wide">Libros</p>
+              {BOOK_LINKS.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileOpen(false)}
+                  className="text-foreground border-border text-base font-medium border-l-2 py-2 pl-3 hover:text-primary transition-colors"
+                >
+                  {item.label}
+                </Link>
+              ))}
+              {navLinksAfterBooks.map((link) => (
                 <a
                   key={link.href}
                   href={link.href}
