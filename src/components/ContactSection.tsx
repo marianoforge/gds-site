@@ -39,6 +39,11 @@ const ContactSection = () => {
         }),
       });
       if (!res.ok) {
+        if (res.status === 429) {
+          const body = (await res.json().catch(() => ({}))) as { error?: string };
+          setSubmitError(body.error ?? "Demasiados envíos. Probá más tarde.");
+          return;
+        }
         setSubmitError("No pudimos enviar el formulario. Intentá nuevamente.");
         return;
       }

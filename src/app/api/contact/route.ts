@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { z } from "zod";
+import { tryConsumeContactSlot } from "@/lib/contact-rate-limit";
 import { appendContactRow } from "@/lib/google-sheets-contact";
 
 const bodySchema = z.object({
@@ -12,6 +13,17 @@ const bodySchema = z.object({
 });
 
 export async function POST(request: Request) {
+  const rate = await tryConsumeContactSlot(request);
+  if (!rate.ok) {
+    return NextResponse.json(
+      { error: "Demasiados envíos. Probá más tarde." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(rate.retryAfterSec) },
+      },
+    );
+  }
+
   const apiKey = process.env.RESEND_API_KEY;
   const to = process.env.CONTACT_EMAIL_TO?.trim();
   const from = process.env.RESEND_FROM?.trim() || "Contacto web <onboarding@resend.dev>";

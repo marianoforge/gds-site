@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "reindex:property-index": "curl -sS -X POST -H \"Authorization: Bearer $CRON_SECRET\" \"${SITE_URL:-http://localhost:3000}/api/admin/reindex-property-index\"",
     "sync:tokko": "curl -sS -H \"Authorization: Bearer $CRON_SECRET\" \"${SITE_URL:-http://localhost:3000}/api/cron/tokko-active-sync\"",
     "sync:google-reviews": "curl -sS -H \"Authorization: Bearer $CRON_SECRET\" \"${SITE_URL:-http://localhost:3000}/api/cron/sync-google-reviews\"",
@@ -46,6 +48,8 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@tailwindcss/typography": "^0.5.19",
     "@tanstack/react-query": "^5.95.2",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.37.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -75,11 +79,13 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/coverage-v8": "^4.1.2",
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
     "husky": "^9.1.7",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.2"
   }
 }
