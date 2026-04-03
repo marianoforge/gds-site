@@ -7,8 +7,7 @@ export const siteImages = {
     "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800&q=80",
   property3:
     "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80",
-  aboutTeam:
-    "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=900&q=80",
+  aboutTeam: "/sobre-nosotros.png",
   book100EmprendedorCover: "https://gustavodesimone.com/wp-content/uploads/2025/02/2.png",
   book100EmprendedorGallery: [
     "https://gustavodesimone.com/wp-content/uploads/2024/09/IMG_4055.jpg",

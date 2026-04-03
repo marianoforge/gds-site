@@ -48,7 +48,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className={`${outfit.variable} ${lora.variable} min-h-screen`}>
+      <body className={`${outfit.variable} ${lora.variable} min-h-screen`} suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
     </html>

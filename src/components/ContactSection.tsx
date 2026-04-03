@@ -96,7 +96,7 @@ const ContactSection = () => {
               </div>
               <div>
                 <p className="font-semibold text-foreground mb-1">WhatsApp</p>
-                <a href="https://wa.me/+5491130601512" className="text-primary hover:underline text-sm">+54 011 3060-1512</a>
+                <a href="https://wa.me/5491165252190" className="text-primary hover:underline text-sm">+54 9 11 6525-2190</a>
               </div>
             </div>
 

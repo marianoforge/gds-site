@@ -5,5 +5,5 @@ export const BOOK_LINKS = [
 
 export function whatsappBookUrl(bookTitle: string): string {
   const text = encodeURIComponent(`Hola, quiero conseguir el libro "${bookTitle}".`);
-  return `https://wa.me/5491130601512?text=${text}`;
+  return `https://wa.me/5491165252190?text=${text}`;
 }

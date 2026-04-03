@@ -78,8 +78,8 @@ const Footer = () => {
               <a href="#" className="flex items-center gap-2 text-sm text-primary-foreground/50 hover:text-accent transition-colors">
                 <MapPin className="w-4 h-4 shrink-0" /> Av. Cabildo 3950, Piso 13, CABA
               </a>
-              <a href="https://wa.me/+5491130601512" className="flex items-center gap-2 text-sm text-primary-foreground/50 hover:text-accent transition-colors">
-                <Phone className="w-4 h-4 shrink-0" /> +54 011 3060-1512
+              <a href="https://wa.me/5491165252190" className="flex items-center gap-2 text-sm text-primary-foreground/50 hover:text-accent transition-colors">
+                <Phone className="w-4 h-4 shrink-0" /> +54 9 11 6525-2190
               </a>
               <a href="https://instagram.com/gds_soluciones_inmobiliarias" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-primary-foreground/50 hover:text-accent transition-colors">
                 <InstagramIcon className="w-4 h-4 shrink-0" /> @gds_soluciones_inmobiliarias

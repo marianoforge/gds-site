@@ -147,7 +147,7 @@ const Navbar = ({ forceSolid = false, googleRating, googleTotalReviews }: Navbar
           )}
 
           <a
-            href="https://wa.me/+5491130601512"
+            href="https://wa.me/5491165252190"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 bg-accent text-accent-foreground px-5 h-[42px] rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity"
@@ -208,7 +208,7 @@ const Navbar = ({ forceSolid = false, googleRating, googleTotalReviews }: Navbar
                 </a>
               ))}
               <a
-                href="https://wa.me/+5491130601512"
+                href="https://wa.me/5491165252190"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 bg-accent text-accent-foreground px-5 py-3 rounded-lg text-sm font-semibold mt-2"
