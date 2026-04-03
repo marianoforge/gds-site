@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { sql } from "@/lib/db";
 import { buildPropertyIndexRow } from "@/lib/tokko-property-index";
+import { requireCronAuth } from "@/lib/cron-auth";
 
 const rawRowSchema = z.object({
   property_id: z.union([z.number().int(), z.string()]),
@@ -35,10 +36,9 @@ async function ensureIndexTable() {
 }
 
 export async function POST(request: Request) {
-  const cronSecret = process.env.CRON_SECRET;
-  const authHeader = request.headers.get("authorization");
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  const authError = requireCronAuth(request);
+  if (authError) {
+    return authError;
   }
 
   try {

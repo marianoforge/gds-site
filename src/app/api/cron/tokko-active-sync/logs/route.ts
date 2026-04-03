@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { sql } from "@/lib/db";
+import { requireCronAuth } from "@/lib/cron-auth";
 
 const logRowSchema = z.object({
   id: z.union([z.number().int(), z.string()]),
@@ -16,6 +17,11 @@ const logRowSchema = z.object({
 });
 
 export async function GET(request: Request) {
+  const authError = requireCronAuth(request);
+  if (authError) {
+    return authError;
+  }
+
   try {
     await sql`
       create table if not exists tokko_sync_logs (

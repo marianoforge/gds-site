@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { sql } from "@/lib/db";
 import { ensureGoogleReviewsTable, fetchFromGoogleApi } from "@/lib/google-reviews";
+import { requireCronAuth } from "@/lib/cron-auth";
 
 export async function GET(request: Request) {
-  const cronSecret = process.env.CRON_SECRET;
-  const authHeader = request.headers.get("authorization");
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  const authError = requireCronAuth(request);
+  if (authError) {
+    return authError;
   }
 
   try {

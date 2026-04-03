@@ -1,9 +1,45 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, Star, Quote } from "lucide-react";
+import { ChevronLeft, ChevronRight, Star, Quote, User } from "lucide-react";
 import type { GooglePlaceReviews, GoogleReview } from "@/lib/google-reviews";
+
+function ReviewAvatar({ name, photoUrl }: { name: string; photoUrl: string }) {
+  const [broken, setBroken] = useState(false);
+
+  useEffect(() => {
+    setBroken(false);
+  }, [photoUrl, name]);
+
+  const trimmed = photoUrl.trim();
+  const showImg = trimmed.length > 0 && !broken;
+
+  if (!showImg) {
+    return (
+      <div
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent/20 ring-2 ring-accent/30"
+        aria-hidden
+      >
+        <User className="h-5 w-5 text-accent" strokeWidth={2} />
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={trimmed}
+      alt=""
+      className="h-10 w-10 shrink-0 rounded-full object-cover ring-2 ring-accent/30"
+      width={40}
+      height={40}
+      loading="lazy"
+      decoding="async"
+      referrerPolicy="no-referrer"
+      onError={() => setBroken(true)}
+    />
+  );
+}
 
 const FALLBACK_REVIEWS: GoogleReview[] = [
   {
@@ -132,21 +168,7 @@ const TestimonialsSection = ({ googleReviews }: Props) => {
                 </p>
 
                 <div className="flex items-center justify-center gap-3">
-                  {review.authorPhoto ? (
-                    <img
-                      src={review.authorPhoto}
-                      alt={review.authorName}
-                      className="w-10 h-10 rounded-full object-cover ring-2 ring-accent/30"
-                      width={40}
-                      height={40}
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center ring-2 ring-accent/30">
-                      <span className="text-accent font-bold text-sm">
-                        {review.authorName.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                  )}
+                  <ReviewAvatar name={review.authorName} photoUrl={review.authorPhoto} />
                   <div className="text-left">
                     <p className="text-accent font-semibold">{review.authorName}</p>
                     {review.relativeTime ? (

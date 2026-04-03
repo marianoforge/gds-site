@@ -3,16 +3,14 @@ import { z } from "zod";
 import { sql } from "@/lib/db";
 import { isTokkoActive } from "@/lib/tokko";
 import { buildPropertyIndexRow } from "@/lib/tokko-property-index";
+import { requireCronAuth } from "@/lib/cron-auth";
+import { getTokkoApiKey } from "@/lib/tokko-credentials";
 
 const TOKKO_PAGE_SIZE = 50;
 
 const tokkoObjectsSchema = z.object({
   objects: z.array(z.record(z.string(), z.unknown())).default([]),
 });
-
-function getTokkoKey() {
-  return process.env.TOKKO_API_KEY ?? process.env.NEXT_PUBLIC_TOKKO_API_KEY;
-}
 
 async function ensureTable() {
   await sql`
@@ -100,15 +98,14 @@ function toId(value: unknown): number | null {
 }
 
 export async function GET(request: Request) {
-  const cronSecret = process.env.CRON_SECRET;
-  const authHeader = request.headers.get("authorization");
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  const authError = requireCronAuth(request);
+  if (authError) {
+    return authError;
   }
 
-  const apiKey = getTokkoKey();
+  const apiKey = getTokkoApiKey();
   if (!apiKey) {
-    return NextResponse.json({ error: "Falta TOKKO_API_KEY o NEXT_PUBLIC_TOKKO_API_KEY" }, { status: 400 });
+    return NextResponse.json({ error: "Falta TOKKO_API_KEY (solo servidor)" }, { status: 400 });
   }
 
   const startedAt = new Date();

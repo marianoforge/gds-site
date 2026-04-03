@@ -2,12 +2,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { sql } from "@/lib/db";
 import { isTokkoActive } from "@/lib/tokko";
+import { requireCronAuth } from "@/lib/cron-auth";
+import { getTokkoApiKey } from "@/lib/tokko-credentials";
 
 const TOKKO_PAGE_SIZE = 50;
-
-function getTokkoKey() {
-  return process.env.TOKKO_API_KEY ?? process.env.NEXT_PUBLIC_TOKKO_API_KEY;
-}
 
 const tokkoObjectsSchema = z.object({
   objects: z.array(z.record(z.string(), z.unknown())).default([]),
@@ -56,10 +54,15 @@ async function fetchAllTokkoIds(apiKey: string): Promise<Map<number, { active: b
   return result;
 }
 
-export async function GET() {
-  const apiKey = getTokkoKey();
+export async function GET(request: Request) {
+  const authError = requireCronAuth(request);
+  if (authError) {
+    return authError;
+  }
+
+  const apiKey = getTokkoApiKey();
   if (!apiKey) {
-    return NextResponse.json({ error: "Falta TOKKO_API_KEY" }, { status: 400 });
+    return NextResponse.json({ error: "Falta TOKKO_API_KEY (solo servidor)" }, { status: 400 });
   }
 
   try {
