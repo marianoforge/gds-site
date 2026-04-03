@@ -60,12 +60,19 @@ const Navbar = ({ forceSolid = false, googleRating, googleTotalReviews }: Navbar
     >
       <div className="container mx-auto flex items-center justify-between py-4 px-4 lg:px-8">
         {/* Logo */}
-        <a href="/#inicio" className="flex flex-col leading-none">
-          <span className={`text-xl font-bold tracking-tight transition-colors ${isSolid ? "text-primary" : "text-primary-foreground"}`}>
+        <a
+          href="/#inicio"
+          className="flex w-[min(17.25rem,calc(100vw-7rem))] flex-col leading-none"
+        >
+          <span
+            className={`block h-[22px] w-full overflow-hidden text-xl font-bold uppercase text-justify [text-justify:inter-character] after:inline-block after:w-full after:content-[''] transition-colors ${isSolid ? "text-primary" : "text-primary-foreground"}`}
+          >
             GUSTAVO DE SIMONE
           </span>
-          <span className={`text-[10px] font-medium tracking-[0.35em] uppercase transition-colors ${isSolid ? "text-muted-foreground" : "text-primary-foreground/70"}`}>
-            Soluciones Inmobiliarias
+          <span
+            className={`mt-1 block h-[13px] w-full overflow-hidden text-[10px] font-medium uppercase text-justify [text-justify:inter-character] after:inline-block after:w-full after:content-[''] transition-colors ${isSolid ? "text-muted-foreground" : "text-primary-foreground/70"}`}
+          >
+            SOLUCIONES INMOBILIARIAS
           </span>
         </a>
 
