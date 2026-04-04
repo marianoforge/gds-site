@@ -19,7 +19,7 @@ type HomePageProps = {
 
 export default function HomePage({ googleReviews, featuredProperties }: HomePageProps) {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen overflow-x-hidden">
       <Navbar
         googleRating={googleReviews?.rating}
         googleTotalReviews={googleReviews?.totalReviews}

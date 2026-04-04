@@ -58,19 +58,18 @@ const Navbar = ({ forceSolid = false, googleRating, googleTotalReviews }: Navbar
           : "bg-transparent"
       }`}
     >
-      <div className="container mx-auto flex items-center justify-between py-4 px-4 lg:px-8">
-        {/* Logo */}
+      <div className="container mx-auto flex items-center justify-between gap-2 py-3 px-3 sm:py-4 sm:px-4 lg:px-8">
         <a
           href="/#inicio"
-          className="flex w-[min(17.25rem,calc(100vw-7rem))] flex-col leading-none"
+          className="flex min-w-0 flex-1 flex-col leading-tight sm:flex-initial sm:w-[min(17.25rem,calc(100vw-7rem))] sm:leading-none"
         >
           <span
-            className={`block h-[22px] w-full overflow-hidden text-xl font-bold uppercase text-justify [text-justify:inter-character] after:inline-block after:w-full after:content-[''] transition-colors ${isSolid ? "text-primary" : "text-primary-foreground"}`}
+            className={`block w-full text-xs font-bold uppercase tracking-wide transition-colors max-[399px]:text-left sm:h-[22px] sm:overflow-hidden sm:text-xl sm:tracking-normal sm:text-justify sm:[text-justify:inter-character] sm:after:inline-block sm:after:w-full sm:after:content-[''] ${isSolid ? "text-primary" : "text-primary-foreground"}`}
           >
             GUSTAVO DE SIMONE
           </span>
           <span
-            className={`mt-1 block h-[13px] w-full overflow-hidden text-[10px] font-medium uppercase text-justify [text-justify:inter-character] after:inline-block after:w-full after:content-[''] transition-colors ${isSolid ? "text-muted-foreground" : "text-primary-foreground/70"}`}
+            className={`mt-0.5 block w-full text-[9px] font-medium uppercase leading-snug transition-colors max-[399px]:text-left sm:mt-1 sm:h-[13px] sm:overflow-hidden sm:text-[10px] sm:leading-none sm:text-justify sm:[text-justify:inter-character] sm:after:inline-block sm:after:w-full sm:after:content-[''] ${isSolid ? "text-muted-foreground" : "text-primary-foreground/70"}`}
           >
             SOLUCIONES INMOBILIARIAS
           </span>
@@ -166,8 +165,9 @@ const Navbar = ({ forceSolid = false, googleRating, googleTotalReviews }: Navbar
 
         {/* Mobile Toggle */}
         <button
+          type="button"
           onClick={() => setMobileOpen(!mobileOpen)}
-          className={`lg:hidden p-2 rounded-lg transition-colors ${isSolid ? "text-foreground" : "text-primary-foreground"}`}
+          className={`shrink-0 lg:hidden p-2 rounded-lg transition-colors ${isSolid ? "text-foreground" : "text-primary-foreground"}`}
         >
           {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>

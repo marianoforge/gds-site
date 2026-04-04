@@ -61,7 +61,8 @@ export default function BookMentePage() {
         <div className="container mx-auto max-w-5xl px-4 lg:px-8">
           <p className="text-accent mb-2 text-sm font-semibold uppercase tracking-[0.15em]">Libros</p>
 
-          <div className="mb-12 grid items-center gap-10 lg:grid-cols-2 lg:gap-12">
+          <div className="mb-12">
+            {/* Tapa del libro: reactivar cuando el asset esté listo (siteImages.bookMenteCover + next/image)
             <div className="relative mx-auto aspect-5/3 w-full max-w-lg overflow-hidden rounded-2xl bg-card shadow-card lg:mx-0">
               <Image
                 src={siteImages.bookMenteCover}
@@ -72,6 +73,7 @@ export default function BookMentePage() {
                 priority
               />
             </div>
+            */}
             <div>
               <h1 className="font-serif text-primary mb-6 text-3xl font-bold italic md:text-5xl">{title}</h1>
               <p className="text-foreground mb-8 text-lg leading-relaxed">
@@ -91,6 +93,7 @@ export default function BookMentePage() {
             </div>
           </div>
 
+          {/* Interior del libro: reactivar cuando los assets estén listos (siteImages.bookMenteInterior)
           <section className="mb-12">
             <h2 className="text-foreground mb-6 text-2xl font-bold">Dentro del libro</h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -110,6 +113,7 @@ export default function BookMentePage() {
               ))}
             </div>
           </section>
+          */}
 
           <div className="mx-auto max-w-3xl">
             <section className="bg-card mb-12 rounded-2xl p-8 shadow-card">

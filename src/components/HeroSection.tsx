@@ -26,7 +26,10 @@ const HeroSection = () => {
   };
 
   return (
-    <section id="inicio" className="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <section
+      id="inicio"
+      className="relative flex min-h-dvh items-center justify-center overflow-x-clip pt-21 sm:pt-20 md:pt-24 lg:pt-28"
+    >
       {/* Background Image */}
       <img
         src={siteImages.hero}
@@ -38,7 +41,7 @@ const HeroSection = () => {
       {/* Overlay */}
       <div className="absolute inset-0 bg-gradient-hero" />
 
-      <div className="relative z-10 container mx-auto px-4 lg:px-8 text-center">
+      <div className="relative z-10 container mx-auto max-w-full px-3 pb-8 text-center sm:px-4 sm:pb-10 md:pb-12 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
@@ -123,7 +126,7 @@ const HeroSection = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 1 }}
-          className="flex flex-wrap justify-center gap-8 md:gap-16 mt-12"
+          className="mt-8 flex flex-wrap justify-center gap-6 sm:mt-10 md:mt-12 md:gap-16"
         >
           {[
             { number: "1000+", label: "Propiedades" },

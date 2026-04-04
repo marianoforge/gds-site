@@ -107,7 +107,7 @@ const TestimonialsSection = ({ googleReviews }: Props) => {
   const review = reviews[current];
 
   return (
-    <section id="testimonios" className="py-24 bg-primary-dark relative overflow-hidden">
+    <section id="testimonios" className="relative overflow-hidden bg-primary-dark py-10 sm:py-12 md:py-20 lg:py-24">
       <div className="absolute top-0 right-0 w-96 h-96 bg-primary/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
 
       <div className="container mx-auto px-4 lg:px-8 relative z-10">
@@ -115,7 +115,7 @@ const TestimonialsSection = ({ googleReviews }: Props) => {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          className="mb-8 text-center sm:mb-12 lg:mb-16"
         >
           <p className="text-accent font-semibold tracking-[0.15em] uppercase text-sm mb-3">
             Testimonios

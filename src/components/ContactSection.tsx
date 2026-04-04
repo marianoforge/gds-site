@@ -63,13 +63,13 @@ const ContactSection = () => {
   };
 
   return (
-    <section id="contacto" className="py-24 bg-secondary">
+    <section id="contacto" className="bg-secondary py-10 sm:py-12 md:py-20 lg:py-24">
       <div className="container mx-auto px-4 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          className="mb-8 text-center sm:mb-12 lg:mb-16"
         >
           <p className="text-accent font-semibold tracking-[0.15em] uppercase text-sm mb-3">Contacto</p>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
@@ -77,7 +77,7 @@ const ContactSection = () => {
           </h2>
         </motion.div>
 
-        <div className="grid lg:grid-cols-5 gap-12 max-w-6xl mx-auto">
+        <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-5 lg:gap-12">
           {/* Info */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}

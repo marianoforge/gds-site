@@ -28,28 +28,26 @@ function InstagramIcon({ className }: { className?: string }) {
 
 const Footer = () => {
   return (
-    <footer className="bg-navy text-primary-foreground/80 py-16">
-      <div className="container mx-auto px-4 lg:px-8">
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
-          {/* Brand */}
-          <div>
-            <div className="mb-4 w-full max-w-69">
-              <h3 className="mb-0 block h-[22px] w-full overflow-hidden text-xl font-bold uppercase text-primary-foreground text-justify [text-justify:inter-character] after:inline-block after:w-full after:content-['']">
+    <footer className="bg-navy py-10 text-primary-foreground/80 sm:py-12 md:py-16">
+      <div className="container mx-auto max-w-full px-4 max-[399px]:px-5 lg:px-8">
+        <div className="mb-12 grid grid-cols-2 gap-x-5 gap-y-10 max-[399px]:gap-x-4 md:grid-cols-2 md:gap-12 lg:grid-cols-4">
+          <div className="col-span-2 text-center md:col-span-1 md:text-left">
+            <div className="mx-auto mb-4 w-full max-w-69 md:mx-0">
+              <h3 className="mb-0 block h-[22px] w-full overflow-hidden text-xl font-bold uppercase text-primary-foreground text-justify [text-justify:inter-character] after:inline-block after:w-full after:content-[''] max-md:mx-auto max-md:max-w-[16rem] max-md:text-left max-md:[text-justify:auto]">
                 GUSTAVO DE SIMONE
               </h3>
-              <p className="mt-1 block h-[13px] w-full overflow-hidden text-[10px] font-medium uppercase text-primary-foreground/50 text-justify [text-justify:inter-character] after:inline-block after:w-full after:content-['']">
+              <p className="mt-1 block h-[13px] w-full overflow-hidden text-[10px] font-medium uppercase text-primary-foreground/50 text-justify [text-justify:inter-character] after:inline-block after:w-full after:content-[''] max-md:mx-auto max-md:max-w-[16rem] max-md:text-left max-md:[text-justify:auto]">
                 SOLUCIONES INMOBILIARIAS
               </p>
             </div>
-            <p className="text-sm leading-relaxed text-primary-foreground/60">
+            <p className="mx-auto max-w-md text-sm leading-relaxed text-primary-foreground/60 md:mx-0">
               Concretando metas juntos. Tu socio de confianza en bienes raíces en Buenos Aires.
             </p>
           </div>
 
-          {/* Links */}
-          <div>
-            <h4 className="font-semibold text-primary-foreground mb-4">Navegación</h4>
-            <div className="space-y-2">
+          <div className="text-center md:text-left">
+            <h4 className="mb-4 font-semibold text-primary-foreground">Navegación</h4>
+            <div className="flex flex-col items-center space-y-2 md:items-start">
               {[
                 ["Inicio", "/#inicio"],
                 ["Nosotros", "/#nosotros"],
@@ -59,21 +57,21 @@ const Footer = () => {
                 ["Testimonios", "/#testimonios"],
                 ["Contacto", "/#contacto"],
               ].map(([label, href]) => (
-                <a key={href} href={href} className="block text-sm text-primary-foreground/50 hover:text-accent transition-colors">
+                <a key={href} href={href} className="block text-sm text-primary-foreground/50 transition-colors hover:text-accent">
                   {label}
                 </a>
               ))}
             </div>
           </div>
 
-          <div>
-            <h4 className="font-semibold text-primary-foreground mb-4">Libros</h4>
-            <div className="space-y-2">
+          <div className="text-center md:text-left">
+            <h4 className="mb-4 font-semibold text-primary-foreground">Libros</h4>
+            <div className="flex flex-col items-center space-y-2 md:items-start">
               {BOOK_LINKS.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="block text-sm text-primary-foreground/50 hover:text-accent transition-colors"
+                  className="block text-sm text-primary-foreground/50 transition-colors hover:text-accent"
                 >
                   {item.label}
                 </Link>
@@ -81,23 +79,30 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Contact */}
-          <div>
-            <h4 className="font-semibold text-primary-foreground mb-4">Contacto</h4>
-            <div className="space-y-3">
-              <a href="#" className="flex items-center gap-2 text-sm text-primary-foreground/50 hover:text-accent transition-colors">
-                <MapPin className="w-4 h-4 shrink-0" /> Av. Cabildo 3950, Piso 13, CABA
+          <div className="col-span-2 flex flex-col items-center text-center md:col-span-1 md:items-start md:text-left">
+            <h4 className="mb-4 w-full font-semibold text-primary-foreground">Contacto</h4>
+            <div className="flex w-full max-w-sm flex-col items-center space-y-3 md:max-w-none md:items-start">
+              <a
+                href="#"
+                className="flex items-start justify-center gap-2 text-center text-sm text-primary-foreground/50 transition-colors hover:text-accent md:justify-start md:text-left"
+              >
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0" /> Av. Cabildo 3950, Piso 13, CABA
               </a>
               <a
                 href={SITE_WHATSAPP_HREF}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 text-sm text-primary-foreground/50 hover:text-accent transition-colors"
+                className="flex items-center justify-center gap-2 text-sm text-primary-foreground/50 transition-colors hover:text-accent md:justify-start"
               >
-                <Phone className="w-4 h-4 shrink-0" /> {SITE_PHONE_DISPLAY}
+                <Phone className="h-4 w-4 shrink-0" /> {SITE_PHONE_DISPLAY}
               </a>
-              <a href="https://instagram.com/gds_soluciones_inmobiliarias" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-primary-foreground/50 hover:text-accent transition-colors">
-                <InstagramIcon className="w-4 h-4 shrink-0" /> @gds_soluciones_inmobiliarias
+              <a
+                href="https://instagram.com/gds_soluciones_inmobiliarias"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 text-sm text-primary-foreground/50 transition-colors hover:text-accent md:justify-start"
+              >
+                <InstagramIcon className="h-4 w-4 shrink-0" /> @gds_soluciones_inmobiliarias
               </a>
             </div>
           </div>

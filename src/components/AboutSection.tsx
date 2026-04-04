@@ -4,31 +4,33 @@ import { siteImages } from "@/lib/site-media";
 
 const AboutSection = () => {
   return (
-    <section id="nosotros" className="py-24 bg-background">
-      <div className="container mx-auto px-4 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          {/* Image */}
+    <section id="nosotros" className="bg-background py-10 sm:py-12 md:py-20 lg:py-24">
+      <div className="container mx-auto max-w-full px-4 max-[399px]:px-5 sm:px-5 lg:px-8">
+        <div className="grid items-center gap-10 max-[399px]:gap-8 lg:grid-cols-2 lg:gap-16">
           <motion.div
             initial={{ opacity: 0, x: -40 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
-            className="relative"
+            className="relative mx-auto w-full max-w-full lg:mx-0"
           >
-            <div className="rounded-2xl overflow-hidden shadow-card-hover">
+            <div className="overflow-hidden rounded-xl shadow-card-hover ring-1 ring-border/60 max-[399px]:rounded-lg lg:rounded-2xl">
               <img
                 src={siteImages.aboutTeam}
                 alt="Equipo de Gustavo De Simone"
-                className="w-full h-[400px] lg:h-[500px] object-cover"
+                className="h-[min(22rem,70vw)] w-full object-cover sm:h-104 lg:h-[500px]"
                 loading="lazy"
                 width={800}
                 height={600}
               />
             </div>
-            {/* Floating Badge */}
-            <div className="absolute -bottom-6 -right-4 lg:-right-8 bg-primary text-primary-foreground rounded-2xl p-6 shadow-card-hover">
-              <p className="text-3xl font-bold">15+</p>
-              <p className="text-sm text-primary-foreground/80">Años de<br />trayectoria</p>
+            <div className="absolute bottom-3 right-3 z-10 max-w-[min(12rem,calc(100%-1.5rem))] rounded-xl bg-primary p-4 text-primary-foreground shadow-card-hover ring-1 ring-primary-foreground/10 max-[399px]:bottom-2.5 max-[399px]:right-2.5 max-[399px]:p-3.5 max-[399px]:rounded-lg lg:max-w-none lg:rounded-2xl lg:p-6 lg:-bottom-6 lg:-right-4 xl:-right-8">
+              <p className="text-2xl font-bold tabular-nums max-[399px]:text-xl lg:text-3xl">15+</p>
+              <p className="text-xs text-primary-foreground/85 max-[399px]:leading-snug sm:text-sm">
+                Años de
+                <br />
+                trayectoria
+              </p>
             </div>
           </motion.div>
 
@@ -55,18 +57,23 @@ const AboutSection = () => {
               que amamos nuestra profesión.
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-6 max-[399px]:grid-cols-2 max-[399px]:gap-x-3 max-[399px]:gap-y-5 sm:grid-cols-3 sm:gap-6">
               {[
                 { icon: Award, title: "CPI 8456", desc: "CABA" },
                 { icon: Users, title: "CMCPSI 7213", desc: "PBA" },
                 { icon: TrendingUp, title: "Crecimiento", desc: "Constante" },
-              ].map(({ icon: Icon, title, desc }) => (
-                <div key={title} className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-primary-light flex items-center justify-center shrink-0">
-                    <Icon className="w-5 h-5 text-primary" />
+              ].map(({ icon: Icon, title, desc }, index) => (
+                <div
+                  key={title}
+                  className={`flex min-w-0 items-start gap-2.5 sm:gap-3 ${
+                    index === 2 ? "max-[399px]:col-span-2 max-[399px]:justify-center" : ""
+                  }`}
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-light ring-1 ring-primary/10">
+                    <Icon className="h-5 w-5 text-primary" />
                   </div>
-                  <div>
-                    <p className="font-semibold text-foreground text-sm">{title}</p>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-foreground">{title}</p>
                     <p className="text-xs text-muted-foreground">{desc}</p>
                   </div>
                 </div>
