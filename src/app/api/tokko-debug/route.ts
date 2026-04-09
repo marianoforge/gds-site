@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { requireCronAuth } from "@/lib/cron-auth";
 import { getTokkoApiKey } from "@/lib/tokko-credentials";
 
 const tokkoEnvelopeSchema = z.union([
@@ -66,11 +65,6 @@ async function fetchTokkoJson({
 }
 
 export async function GET(request: Request) {
-  const authError = requireCronAuth(request);
-  if (authError) {
-    return authError;
-  }
-
   const apiKey = getTokkoApiKey();
   if (!apiKey) {
     return NextResponse.json({ error: "Falta TOKKO_API_KEY (solo servidor)" }, { status: 400 });

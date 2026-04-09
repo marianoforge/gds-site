@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -143,6 +144,7 @@ function extractPropertyImages(item: TokkoRecord): PropertyImage[] {
 }
 
 export default function TokkoPage() {
+  const router = useRouter();
   const [resource, setResource] = useState<TokkoResource>("property");
   const [idFilter, setIdFilter] = useState("");
   const [page, setPage] = useState(1);
@@ -154,11 +156,41 @@ export default function TokkoPage() {
   const [loading, setLoading] = useState(false);
   const [savingFeatured, setSavingFeatured] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [authError, setAuthError] = useState(false);
+  const authRedirectInProgressRef = useRef(false);
+  const redirectToLogin = useCallback(() => {
+    const redirect = encodeURIComponent("/tokko");
+    router.replace(`/backoffice/login?redirect=${redirect}`);
+  }, [router]);
+
+  const handleUnauthorized = useCallback(
+    (status: number) => {
+      if (status !== 401) {
+        return false;
+      }
+      if (authRedirectInProgressRef.current) {
+        return true;
+      }
+      authRedirectInProgressRef.current = true;
+      setAuthError(true);
+      setError("Sesión expirada. Redirigiendo al login...");
+      redirectToLogin();
+      return true;
+    },
+    [redirectToLogin],
+  );
   const loadFeaturedIds = useCallback(async () => {
+    if (authRedirectInProgressRef.current) {
+      return;
+    }
     try {
       const res = await fetch("/api/featured-properties", {
         cache: "no-store",
       });
+      if (handleUnauthorized(res.status)) {
+        return;
+      }
       if (!res.ok) {
         return;
       }
@@ -168,14 +200,20 @@ export default function TokkoPage() {
         setDraftFeaturedIds(json.ids);
       }
     } catch {}
-  }, []);
+  }, [handleUnauthorized]);
 
   const loadCronLogs = useCallback(async () => {
+    if (authRedirectInProgressRef.current) {
+      return;
+    }
     setLoadingCronLogs(true);
     try {
       const res = await fetch("/api/cron/tokko-active-sync/logs?limit=20", {
         cache: "no-store",
       });
+      if (handleUnauthorized(res.status)) {
+        return;
+      }
       if (!res.ok) {
         return;
       }
@@ -187,7 +225,7 @@ export default function TokkoPage() {
     } finally {
       setLoadingCronLogs(false);
     }
-  }, []);
+  }, [handleUnauthorized]);
 
   const allItems = useMemo(() => extractItems(payload?.data), [payload]);
   const items = allItems;
@@ -199,6 +237,9 @@ export default function TokkoPage() {
   }, [allItems.length, idFilter, payload]);
 
   const loadListData = useCallback(async () => {
+    if (authRedirectInProgressRef.current) {
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -211,6 +252,9 @@ export default function TokkoPage() {
       const res = await fetch(`/api/tokko-debug?${params.toString()}`, {
         cache: "no-store",
       });
+      if (handleUnauthorized(res.status)) {
+        return;
+      }
       const json = (await res.json()) as TokkoResponse | { error: string };
       if (!res.ok || "error" in json) {
         setPayload(null);
@@ -224,9 +268,12 @@ export default function TokkoPage() {
     } finally {
       setLoading(false);
     }
-  }, [resource, page]);
+  }, [handleUnauthorized, page, resource]);
 
   const loadById = useCallback(async () => {
+    if (authRedirectInProgressRef.current) {
+      return;
+    }
     const id = idFilter.trim();
     if (!id) {
       return;
@@ -243,6 +290,9 @@ export default function TokkoPage() {
       const res = await fetch(`/api/tokko-debug?${params.toString()}`, {
         cache: "no-store",
       });
+      if (handleUnauthorized(res.status)) {
+        return;
+      }
       const json = (await res.json()) as TokkoResponse | { error: string };
       if (!res.ok || "error" in json) {
         setPayload(null);
@@ -256,22 +306,31 @@ export default function TokkoPage() {
     } finally {
       setLoading(false);
     }
-  }, [resource, idFilter]);
+  }, [handleUnauthorized, idFilter, resource]);
 
   useEffect(() => {
+    if (authError) {
+      return;
+    }
     void loadFeaturedIds();
-  }, [loadFeaturedIds]);
+  }, [authError, loadFeaturedIds]);
 
   useEffect(() => {
+    if (authError) {
+      return;
+    }
     void loadCronLogs();
-  }, [loadCronLogs]);
+  }, [authError, loadCronLogs]);
 
   useEffect(() => {
+    if (authError) {
+      return;
+    }
     if (idFilter.trim()) {
       return;
     }
     void loadListData();
-  }, [loadListData, idFilter]);
+  }, [authError, idFilter, loadListData]);
 
   const onToggleFeatured = useCallback((item: TokkoRecord) => {
     const id = typeof item.id === "number" ? item.id : Number(item.id);
@@ -321,6 +380,9 @@ export default function TokkoPage() {
         ),
       ];
       const responses = await Promise.all(requests);
+      if (responses.some((response) => handleUnauthorized(response.status))) {
+        return;
+      }
       if (responses.some((response) => !response.ok)) {
         setError("No se pudieron guardar todos los cambios");
       }
@@ -331,22 +393,44 @@ export default function TokkoPage() {
     } finally {
       setSavingFeatured(false);
     }
-  }, [draftFeaturedIds, featuredIds, loadFeaturedIds]);
+  }, [draftFeaturedIds, featuredIds, handleUnauthorized, loadFeaturedIds]);
+
+  const logout = useCallback(async () => {
+    setLoggingOut(true);
+    try {
+      await fetch("/api/backoffice/logout", { method: "POST" });
+    } finally {
+      redirectToLogin();
+      setLoggingOut(false);
+    }
+  }, [redirectToLogin]);
 
   return (
     <main className="min-h-screen bg-background py-12">
       <div className="container mx-auto px-4 lg:px-8 space-y-6">
         <div className="space-y-2">
-          <p className="text-accent font-semibold tracking-[0.15em] uppercase text-sm">
-            Tokko Explorer
-          </p>
-          <h1 className="text-3xl md:text-4xl font-bold">
-            Listado de propiedades
-          </h1>
-          <p className="text-muted-foreground">
-            Endpoint base de schema:
-            https://www.tokkobroker.com/api/v1/development/
-          </p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-accent font-semibold tracking-[0.15em] uppercase text-sm">
+                Tokko Explorer
+              </p>
+              <h1 className="text-3xl md:text-4xl font-bold">
+                Listado de propiedades
+              </h1>
+              <p className="text-muted-foreground">
+                Endpoint base de schema:
+                https://www.tokkobroker.com/api/v1/development/
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => void logout()}
+              disabled={loggingOut}
+            >
+              {loggingOut ? "Saliendo..." : "Cerrar sesión"}
+            </Button>
+          </div>
         </div>
 
         <Card>
