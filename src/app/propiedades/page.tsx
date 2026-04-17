@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Bath, BedDouble, Car, Home, MapPin, Maximize, Search } from "lucide-react";
+import { Bath, BedDouble, Car, Home, MapPin, Maximize } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { siteImages } from "@/lib/site-media";
@@ -42,7 +42,6 @@ type TokkoCardRecord = {
   photos?: Array<Record<string, unknown>>;
 };
 
-const LOCATION_OPTIONS = ["Todas las zonas", "Palermo", "Belgrano", "Recoleta", "Núñez", "Caballito"];
 const TYPE_OPTIONS = ["Todos", "Departamento", "Casa", "PH", "Terreno"];
 const BEDROOM_OPTIONS = ["Cualquiera", "1", "2", "3", "4+"];
 const PAGE_SIZE = 12;
@@ -125,90 +124,10 @@ function mapRawPropertyToCard(item: TokkoCardRecord, index: number): PropertyIte
   };
 }
 
-function FiltersBar({
-  location,
-  type,
-  bedrooms,
-}: {
-  location: string;
-  type: string;
-  bedrooms: string;
-}) {
-  return (
-    <form className="mb-10 rounded-2xl bg-card p-5 shadow-card md:p-6">
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-4 md:gap-4">
-        <div className="flex items-center gap-3 rounded-xl bg-secondary px-4 py-3">
-          <MapPin className="h-5 w-5 shrink-0 text-primary" />
-          <div className="flex w-full flex-col">
-            <span className="text-xs font-medium text-muted-foreground">Ubicación</span>
-            <select
-              name="ubicacion"
-              defaultValue={location}
-              className="cursor-pointer bg-transparent text-sm font-medium text-foreground outline-none"
-            >
-              {LOCATION_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3 rounded-xl bg-secondary px-4 py-3">
-          <Home className="h-5 w-5 shrink-0 text-primary" />
-          <div className="flex w-full flex-col">
-            <span className="text-xs font-medium text-muted-foreground">Tipo</span>
-            <select
-              name="tipo"
-              defaultValue={type}
-              className="cursor-pointer bg-transparent text-sm font-medium text-foreground outline-none"
-            >
-              {TYPE_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3 rounded-xl bg-secondary px-4 py-3">
-          <BedDouble className="h-5 w-5 shrink-0 text-primary" />
-          <div className="flex w-full flex-col">
-            <span className="text-xs font-medium text-muted-foreground">Dormitorios</span>
-            <select
-              name="dormitorios"
-              defaultValue={bedrooms}
-              className="cursor-pointer bg-transparent text-sm font-medium text-foreground outline-none"
-            >
-              {BEDROOM_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <button
-          type="submit"
-          className="flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-dark"
-        >
-          <Search className="h-5 w-5" />
-          Buscar
-        </button>
-      </div>
-    </form>
-  );
-}
-
 export default function PropertiesPage() {
   const searchParams = useSearchParams();
 
-  const initialLocation = LOCATION_OPTIONS.includes(searchParams.get("ubicacion") ?? "")
-    ? (searchParams.get("ubicacion") as string)
-    : "Todas las zonas";
+  const initialLocation = searchParams.get("ubicacion") ?? "";
   const initialType = TYPE_OPTIONS.includes(searchParams.get("tipo") ?? "")
     ? (searchParams.get("tipo") as string)
     : "Todos";
@@ -232,6 +151,13 @@ export default function PropertiesPage() {
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const loadingRef = useRef(false);
   const pageRef = useRef(0);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSubmitted({ location, type, bedrooms });
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [location, type, bedrooms]);
 
   const key = useMemo(
     () => `${submitted.location}-${submitted.type}-${submitted.bedrooms}`,
@@ -344,29 +270,19 @@ export default function PropertiesPage() {
     <div className="min-h-screen bg-secondary">
       <Navbar forceSolid />
       <main className="container mx-auto px-4 pb-20 pt-28 lg:px-8">
-        <form
-          className="mb-10 rounded-2xl bg-card p-5 shadow-card md:p-6"
-          onSubmit={(event) => {
-            event.preventDefault();
-            setSubmitted({ location, type, bedrooms });
-          }}
-        >
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-4 md:gap-4">
+        <div className="mb-10 rounded-2xl bg-card p-5 shadow-card md:p-6">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-4">
             <div className="flex items-center gap-3 rounded-xl bg-secondary px-4 py-3">
               <MapPin className="h-5 w-5 shrink-0 text-primary" />
               <div className="flex w-full flex-col">
                 <span className="text-xs font-medium text-muted-foreground">Ubicación</span>
-                <select
+                <input
+                  type="text"
                   value={location}
                   onChange={(event) => setLocation(event.target.value)}
-                  className="cursor-pointer bg-transparent text-sm font-medium text-foreground outline-none"
-                >
-                  {LOCATION_OPTIONS.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="Barrio, zona o dirección"
+                  className="bg-transparent text-sm font-medium text-foreground outline-none placeholder:text-muted-foreground/60"
+                />
               </div>
             </div>
             <div className="flex items-center gap-3 rounded-xl bg-secondary px-4 py-3">
@@ -403,15 +319,8 @@ export default function PropertiesPage() {
                 </select>
               </div>
             </div>
-            <button
-              type="submit"
-              className="flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-dark"
-            >
-              <Search className="h-5 w-5" />
-              Buscar
-            </button>
           </div>
-        </form>
+        </div>
 
         <div className="mb-8 flex items-center justify-between gap-4">
           <h1 className="text-3xl font-bold text-foreground md:text-4xl">Todas las propiedades</h1>

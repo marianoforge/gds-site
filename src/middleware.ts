@@ -17,7 +17,10 @@ export async function middleware(request: NextRequest) {
     if (isApiRoute) {
       return NextResponse.json({ error: "Backoffice no configurado" }, { status: 503 });
     }
-    return NextResponse.redirect(new URL("/", request.url));
+    const loginUrl = new URL("/backoffice/login", request.url);
+    loginUrl.searchParams.set("error", "config");
+    loginUrl.searchParams.set("redirect", `${pathname}${request.nextUrl.search}`);
+    return NextResponse.redirect(loginUrl);
   }
 
   const token = request.cookies.get(BACKOFFICE_SESSION_COOKIE)?.value;

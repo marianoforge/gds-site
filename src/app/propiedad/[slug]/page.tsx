@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Bath, BedDouble, Car, Mail, MapPin, Maximize, Phone } from "lucide-react";
+import { Bath, BedDouble, Car, MapPin, Maximize, Phone } from "lucide-react";
 import { getPropertyBySlugCached, getRelatedPropertiesCached, parsePropertyId } from "@/lib/property-details";
 import PropertyGallery, { type PropertyGalleryPhoto } from "@/components/PropertyGallery";
+import EmailContactButton from "@/components/EmailContactButton";
 import { siteImages } from "@/lib/site-media";
 
 type UnknownRecord = Record<string, unknown>;
@@ -404,13 +405,7 @@ export default async function PropertyDetailPage({
                   <p className="text-sm font-semibold text-foreground">Para más información contactanos</p>
                   <div className="mt-4 flex flex-wrap items-center gap-3">
                     {branchContact.email ? (
-                      <a
-                        href={`mailto:${branchContact.email}`}
-                        className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-secondary/50 text-primary transition-colors hover:border-primary/40 hover:bg-secondary"
-                        aria-label={`Enviar email a ${branchContact.email}`}
-                      >
-                        <Mail className="h-5 w-5 shrink-0" aria-hidden />
-                      </a>
+                      <EmailContactButton email={branchContact.email} />
                     ) : null}
                     {branchPhoneDigits ? (
                       <a

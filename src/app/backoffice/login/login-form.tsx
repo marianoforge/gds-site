@@ -5,9 +5,13 @@ import { useRouter } from "next/navigation";
 
 type BackofficeLoginFormProps = {
   redirectTo: string;
+  configError?: boolean;
 };
 
-export default function BackofficeLoginForm({ redirectTo }: BackofficeLoginFormProps) {
+export default function BackofficeLoginForm({
+  redirectTo,
+  configError = false,
+}: BackofficeLoginFormProps) {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -46,6 +50,11 @@ export default function BackofficeLoginForm({ redirectTo }: BackofficeLoginFormP
       <p className="mb-5 text-sm text-muted-foreground">
         Ingresá usuario y clave para gestionar destacadas.
       </p>
+      {configError ? (
+        <p className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+          Backoffice no configurado. Faltan variables de entorno en el servidor.
+        </p>
+      ) : null}
       <label className="mb-4 block">
         <span className="mb-1 block text-sm font-medium text-foreground">Usuario</span>
         <input
