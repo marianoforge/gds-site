@@ -1,8 +1,10 @@
+import Image from "next/image";
 import Link from "next/link";
 import { BookOpen } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { BOOK_LINKS, whatsappBookUrl } from "@/lib/book-links";
+import { siteImages } from "@/lib/site-media";
 
 export const metadata = {
   title: "100% Emprendedor | Gustavo De Simone",
@@ -19,19 +21,17 @@ export default function BookEmprendedorPage() {
         <div className="container mx-auto max-w-5xl px-4 lg:px-8">
           <p className="text-accent mb-2 text-sm font-semibold uppercase tracking-[0.15em]">Libros</p>
 
-          <div className="mb-12">
-            {/* Tapas y galería del libro: reactivar cuando los assets estén listos (siteImages + next/image)
-            <div className="relative mx-auto aspect-3/2 w-full max-w-lg overflow-hidden rounded-2xl bg-card shadow-card lg:mx-0">
+          <div className="mb-12 grid items-start gap-10 lg:grid-cols-[minmax(0,320px)_1fr] lg:gap-12">
+            <div className="shadow-card relative mx-auto aspect-3/4 w-full max-w-xs overflow-hidden rounded-2xl border border-border/60 bg-card lg:mx-0 lg:max-w-none">
               <Image
                 src={siteImages.book100EmprendedorCover}
                 alt="Tapa del libro 100% Emprendedor"
                 fill
-                className="object-contain p-4"
-                sizes="(max-width: 1024px) 100vw, 480px"
+                className="object-cover object-center"
+                sizes="(max-width: 1024px) 320px, 320px"
                 priority
               />
             </div>
-            */}
             <div>
               <h1 className="font-serif text-primary mb-6 text-4xl font-bold italic md:text-5xl">{title}</h1>
               <p className="text-foreground mb-8 text-lg leading-relaxed">
@@ -50,28 +50,6 @@ export default function BookEmprendedorPage() {
               </a>
             </div>
           </div>
-
-          {/* Galería del libro: reactivar cuando los assets estén listos
-          <section className="mb-12">
-            <h2 className="text-foreground mb-6 text-2xl font-bold">Galería</h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              {siteImages.book100EmprendedorGallery.map((src, index) => (
-                <div
-                  key={src}
-                  className="relative aspect-4/3 overflow-hidden rounded-2xl bg-card shadow-card"
-                >
-                  <Image
-                    src={src}
-                    alt={`${title} — imagen ${index + 1}`}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 640px) 100vw, 33vw"
-                  />
-                </div>
-              ))}
-            </div>
-          </section>
-          */}
 
           <div className="mx-auto max-w-3xl">
             <section className="bg-card mb-12 rounded-2xl p-8 shadow-card">

@@ -3,6 +3,7 @@
 import AboutSection from "@/components/AboutSection";
 import ContactSection from "@/components/ContactSection";
 import Footer from "@/components/Footer";
+import BooksSection from "@/components/BooksSection";
 import PartnerAlliancesSection from "@/components/PartnerAlliancesSection";
 import HeroSection from "@/components/HeroSection";
 import Navbar from "@/components/Navbar";
@@ -31,6 +32,7 @@ export default function HomePage({ googleReviews, featuredProperties }: HomePage
       <TestimonialsSection googleReviews={googleReviews} />
       <ContactSection />
       <PartnerAlliancesSection />
+      <BooksSection />
       <Footer />
     </div>
   );
