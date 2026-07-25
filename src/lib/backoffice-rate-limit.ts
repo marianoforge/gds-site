@@ -61,16 +61,21 @@ function getUpstashLimiter(): Ratelimit | null {
     upstashLimiter = null;
     return null;
   }
-  const max = getMaxRequests();
-  const windowMs = getWindowMs();
-  const minutes = Math.max(1, Math.ceil(windowMs / 60_000));
-  const duration = `${minutes} m` as `${number} m`;
-  upstashLimiter = new Ratelimit({
-    redis: Redis.fromEnv(),
-    limiter: Ratelimit.slidingWindow(max, duration),
-    prefix: "ratelimit:backoffice-login",
-  });
-  return upstashLimiter;
+  try {
+    const max = getMaxRequests();
+    const windowMs = getWindowMs();
+    const minutes = Math.max(1, Math.ceil(windowMs / 60_000));
+    const duration = `${minutes} m` as `${number} m`;
+    upstashLimiter = new Ratelimit({
+      redis: new Redis({ url, token }),
+      limiter: Ratelimit.slidingWindow(max, duration),
+      prefix: "ratelimit:backoffice-login",
+    });
+    return upstashLimiter;
+  } catch {
+    upstashLimiter = null;
+    return null;
+  }
 }
 
 export async function tryConsumeBackofficeLoginSlot(
@@ -81,12 +86,21 @@ export async function tryConsumeBackofficeLoginSlot(
   const windowMs = getWindowMs();
   const limiter = getUpstashLimiter();
   if (limiter) {
-    const { success, reset } = await limiter.limit(id);
-    if (!success) {
-      const retryAfterSec = Math.max(1, Math.ceil((reset - Date.now()) / 1000));
-      return { ok: false, retryAfterSec };
+    try {
+      const { success, reset } = await limiter.limit(id);
+      if (!success) {
+        const retryAfterSec = Math.max(1, Math.ceil((reset - Date.now()) / 1000));
+        return { ok: false, retryAfterSec };
+      }
+      return { ok: true };
+    } catch {
+      upstashLimiter = null;
     }
-    return { ok: true };
   }
   return memoryConsume(id, max, windowMs);
+}
+
+export function resetBackofficeRateLimitMemoryForTests(): void {
+  hits.clear();
+  upstashLimiter = undefined;
 }
