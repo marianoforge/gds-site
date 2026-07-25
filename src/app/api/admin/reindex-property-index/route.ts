@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { sql } from "@/lib/db";
 import { buildPropertyIndexRow } from "@/lib/tokko-property-index";
-import { requireCronAuth } from "@/lib/cron-auth";
+import { requireCronOrBackofficeAuth } from "@/lib/cron-auth";
 
 const rawRowSchema = z.object({
   property_id: z.union([z.number().int(), z.string()]),
@@ -36,7 +36,7 @@ async function ensureIndexTable() {
 }
 
 export async function POST(request: Request) {
-  const authError = requireCronAuth(request);
+  const authError = requireCronOrBackofficeAuth(request);
   if (authError) {
     return authError;
   }

@@ -7,6 +7,7 @@ import { Bath, BedDouble, Car, Home, MapPin, Maximize } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { siteImages } from "@/lib/site-media";
+import { getTokkoBedrooms } from "@/lib/tokko-property-index";
 
 type PropertyItem = {
   propertyId: number;
@@ -95,8 +96,8 @@ function mapRawPropertyToCard(item: TokkoCardRecord, index: number): PropertyIte
   if (!Number.isInteger(propertyId) || propertyId <= 0) {
     return null;
   }
-  const bedrooms = toNumberValue(item.bedroom_amount || item.room_amount || item.suite_amount);
-  const bathrooms = toNumberValue(item.bathroom_amount || item.bathrooms);
+  const bedrooms = getTokkoBedrooms(item);
+  const bathrooms = toNumberValue(item.bathroom_amount ?? item.bathrooms);
   const parkingRaw =
     typeof item.garage === "boolean" ? (item.garage ? 1 : 0) : item.garage || item.parking_lot_amount;
   const parking = toNumberValue(parkingRaw);

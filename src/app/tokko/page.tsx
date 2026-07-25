@@ -152,6 +152,8 @@ export default function TokkoPage() {
   const [draftFeaturedIds, setDraftFeaturedIds] = useState<number[]>([]);
   const [cronLogs, setCronLogs] = useState<CronLog[]>([]);
   const [loadingCronLogs, setLoadingCronLogs] = useState(false);
+  const [reindexing, setReindexing] = useState(false);
+  const [reindexMessage, setReindexMessage] = useState<string | null>(null);
   const [payload, setPayload] = useState<TokkoResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [savingFeatured, setSavingFeatured] = useState(false);
@@ -395,6 +397,42 @@ export default function TokkoPage() {
     }
   }, [draftFeaturedIds, featuredIds, handleUnauthorized, loadFeaturedIds]);
 
+  const reindexProperties = useCallback(async () => {
+    if (authRedirectInProgressRef.current || reindexing) {
+      return;
+    }
+    setReindexing(true);
+    setReindexMessage(null);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/reindex-property-index", {
+        method: "POST",
+        cache: "no-store",
+      });
+      if (handleUnauthorized(res.status)) {
+        return;
+      }
+      const json = (await res.json()) as {
+        ok?: boolean;
+        upserted?: number;
+        skipped?: number;
+        totalIndexed?: number;
+        error?: string;
+      };
+      if (!res.ok || json.ok === false) {
+        setError(json.error || "No se pudo reindexar las propiedades");
+        return;
+      }
+      setReindexMessage(
+        `Reindexado: ${json.upserted ?? 0} actualizadas · ${json.skipped ?? 0} omitidas · total ${json.totalIndexed ?? 0}`,
+      );
+    } catch {
+      setError("No se pudo reindexar las propiedades");
+    } finally {
+      setReindexing(false);
+    }
+  }, [handleUnauthorized, reindexing]);
+
   const logout = useCallback(async () => {
     setLoggingOut(true);
     try {
@@ -510,19 +548,34 @@ export default function TokkoPage() {
 
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between gap-3">
-              <CardTitle>Logs del cron</CardTitle>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => void loadCronLogs()}
-                disabled={loadingCronLogs}
-              >
-                {loadingCronLogs ? "Actualizando..." : "Actualizar"}
-              </Button>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <CardTitle>Mantenimiento</CardTitle>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  type="button"
+                  variant="default"
+                  size="sm"
+                  onClick={() => void reindexProperties()}
+                  disabled={reindexing}
+                >
+                  {reindexing ? "Reindexando..." : "Reindexar propiedades"}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void loadCronLogs()}
+                  disabled={loadingCronLogs}
+                >
+                  {loadingCronLogs ? "Actualizando..." : "Actualizar logs"}
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
+            {reindexMessage ? (
+              <p className="text-sm text-muted-foreground">{reindexMessage}</p>
+            ) : null}
+            <p className="text-sm font-medium">Logs del cron</p>
             {cronLogs.length === 0 ? (
               <p className="text-sm text-muted-foreground">Sin logs todavía.</p>
             ) : null}

@@ -5,6 +5,7 @@ import { getPropertyBySlugCached, getRelatedPropertiesCached, parsePropertyId } 
 import PropertyGallery, { type PropertyGalleryPhoto } from "@/components/PropertyGallery";
 import EmailContactButton from "@/components/EmailContactButton";
 import { siteImages } from "@/lib/site-media";
+import { getTokkoBedrooms, getTokkoRooms } from "@/lib/tokko-property-index";
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -219,8 +220,8 @@ function getCoordinates(property: UnknownRecord): { lat: number; lng: number } |
 }
 
 function getStats(property: UnknownRecord) {
-  const bedrooms = toNumber(property.bedroom_amount || property.room_amount || property.suite_amount);
-  const bathrooms = toNumber(property.bathroom_amount || property.bathrooms);
+  const bedrooms = getTokkoBedrooms(property);
+  const bathrooms = toNumber(property.bathroom_amount ?? property.bathrooms);
   const parkingRaw =
     typeof property.garage === "boolean"
       ? property.garage
@@ -230,7 +231,7 @@ function getStats(property: UnknownRecord) {
   const parking = toNumber(parkingRaw);
   const covered = toNumber(property.roofed_surface || property.surface);
   const total = toNumber(property.total_surface || property.surface || property.roofed_surface);
-  const rooms = toNumber(property.room_amount);
+  const rooms = getTokkoRooms(property);
   return { bedrooms, bathrooms, parking, covered, total, rooms };
 }
 

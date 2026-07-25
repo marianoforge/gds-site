@@ -4,6 +4,7 @@ import {
   hasBackofficeConfig,
   isBackofficeSessionValid,
 } from "@/lib/backoffice-auth";
+import { hasCronBearer } from "@/lib/cron-auth";
 
 function unauthorizedApiResponse() {
   return NextResponse.json({ error: "No autorizado" }, { status: 401 });
@@ -12,6 +13,11 @@ function unauthorizedApiResponse() {
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const isApiRoute = pathname.startsWith("/api/");
+  const isAdminApi = pathname.startsWith("/api/admin/");
+
+  if (isAdminApi && hasCronBearer(request)) {
+    return NextResponse.next();
+  }
 
   if (!hasBackofficeConfig()) {
     if (isApiRoute) {

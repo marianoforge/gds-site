@@ -56,6 +56,33 @@ function toNumber(value: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+function firstPresentNumber(...values: unknown[]): number {
+  for (const value of values) {
+    if (value === null || value === undefined || value === "") {
+      continue;
+    }
+    const n = typeof value === "number" ? value : Number(value);
+    if (Number.isFinite(n)) {
+      return n;
+    }
+  }
+  return 0;
+}
+
+export type TokkoRoomFields = {
+  suite_amount?: unknown;
+  bedroom_amount?: unknown;
+  room_amount?: unknown;
+};
+
+export function getTokkoBedrooms(item: TokkoRoomFields): number {
+  return firstPresentNumber(item.suite_amount, item.bedroom_amount);
+}
+
+export function getTokkoRooms(item: TokkoRoomFields): number {
+  return firstPresentNumber(item.room_amount);
+}
+
 function toText(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
 }
@@ -111,8 +138,8 @@ export function buildPropertyIndexRow(
   const operation = toCapitalizedText(toText(item.operations?.[0]?.operation_type) || "Venta");
   const locationRaw = toText(item.location?.short_location) || toText(item.location?.name) || toText(item.location?.full_location) || "Zona no informada";
   const location = toCapitalizedText(locationRaw);
-  const bedrooms = toNumber(item.bedroom_amount || item.room_amount || item.suite_amount);
-  const bathrooms = toNumber(item.bathroom_amount || item.bathrooms);
+  const bedrooms = getTokkoBedrooms(item);
+  const bathrooms = firstPresentNumber(item.bathroom_amount, item.bathrooms);
   const parkingRaw =
     typeof item.garage === "boolean"
       ? item.garage

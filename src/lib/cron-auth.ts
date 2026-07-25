@@ -4,6 +4,14 @@ function isVercelProduction(): boolean {
   return process.env.VERCEL_ENV === "production";
 }
 
+export function hasCronBearer(request: Request): boolean {
+  const secret = process.env.CRON_SECRET?.trim();
+  if (!secret) {
+    return false;
+  }
+  return request.headers.get("authorization") === `Bearer ${secret}`;
+}
+
 export function requireCronAuth(request: Request): NextResponse | null {
   const secret = process.env.CRON_SECRET?.trim();
 
@@ -15,10 +23,17 @@ export function requireCronAuth(request: Request): NextResponse | null {
     return null;
   }
 
-  const auth = request.headers.get("authorization");
-  if (auth !== `Bearer ${secret}`) {
+  if (!hasCronBearer(request)) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
+  return null;
+}
+
+export function requireCronOrBackofficeAuth(request: Request): NextResponse | null {
+  const auth = request.headers.get("authorization");
+  if (auth?.startsWith("Bearer ")) {
+    return requireCronAuth(request);
+  }
   return null;
 }
